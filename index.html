@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0B2540">
+<title>Avaliação pré-anestésica Anexty</title>
+<style>
+/* Layout: barra fixa no topo com duas telas. Paciente = formulário em etapas, coluna única, pensado para celular. Ficha = lista de pacientes à esquerda e ficha completa à direita. */
+:root{
+  --top-bg:#0B2540; --top-fg:#FFFFFF;
+  --bg:#F0F4F9; --surface:#FFFFFF; --line:#D0DCE8; --faint:#EEF2F7;
+  --ink:#0B2540; --muted:#5E7189;
+  --blue:#1F6FEB; --blue-soft:#E8F1FD; --btn-bg:#1F6FEB; --btn-fg:#FFFFFF;
+  --ok-bg:#D4EDDA; --ok-fg:#155724; --ok-line:#A8D5B5;
+  --warn-bg:#FFF1CC; --warn-fg:#6B4A00; --warn-line:#EBC45E;
+  --bad-bg:#FDE3E1; --bad-fg:#8A1C1C; --bad-line:#EFA3A0;
+  --sans:system-ui,'Segoe UI',Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --top-bg:#091B30; --top-fg:#FFFFFF;
+    --bg:#0D1520; --surface:#142133; --line:#27394F; --faint:#1A2B40;
+    --ink:#E7EEF7; --muted:#93A5BA;
+    --blue:#5B9BFF; --blue-soft:#17304F; --btn-bg:#5B9BFF; --btn-fg:#06101D;
+    --ok-bg:#17361F; --ok-fg:#A8E0B4; --ok-line:#2C6B3C;
+    --warn-bg:#3A2F10; --warn-fg:#F3D488; --warn-line:#7A6120;
+    --bad-bg:#3F1A19; --bad-fg:#F7B4B1; --bad-line:#8A3A37;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --top-bg:#091B30; --top-fg:#FFFFFF;
+  --bg:#0D1520; --surface:#142133; --line:#27394F; --faint:#1A2B40;
+  --ink:#E7EEF7; --muted:#93A5BA;
+  --blue:#5B9BFF; --blue-soft:#17304F; --btn-bg:#5B9BFF; --btn-fg:#06101D;
+  --ok-bg:#17361F; --ok-fg:#A8E0B4; --ok-line:#2C6B3C;
+  --warn-bg:#3A2F10; --warn-fg:#F3D488; --warn-line:#7A6120;
+  --bad-bg:#3F1A19; --bad-fg:#F7B4B1; --bad-line:#8A3A37;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;font-weight:600;text-wrap:balance}
+h1{font-size:22px;letter-spacing:-.2px}
+h2{font-size:19px}
+h3{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+p{margin:0}
+.muted{color:var(--muted)}
+.sm{font-size:13px}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--top-bg);color:var(--top-fg);display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;padding:10px 16px}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand b{font-size:18px;letter-spacing:-.3px}
+.brand span{font-size:12px;opacity:.75}
+.seg{display:flex;gap:2px;padding:3px;border-radius:9px;background:rgba(255,255,255,.12)}
+.seg button{border:0;background:transparent;color:var(--top-fg);padding:7px 14px;border-radius:7px;cursor:pointer;font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--top-fg);color:var(--top-bg)}
+.seg button:focus-visible{outline:2px solid var(--top-fg);outline-offset:2px}
+.demo{background:var(--warn-bg);color:var(--warn-fg);padding:8px 16px;font-size:13px}
+
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:20px 40px}
+.pt{max-width:640px;margin:0 auto;display:grid;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:16px;min-width:0}
+.head{display:grid;gap:4px}
+.prog{height:6px;background:var(--faint);border-radius:3px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--blue);transition:width .2s}
+.eyebrow{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.fields{display:grid;gap:18px}
+.f{display:grid;gap:6px;min-width:0}
+.f[hidden]{display:none}
+.lbl{font-weight:600}
+.req{color:var(--bad-fg)}
+.hint{font-size:13px;color:var(--muted)}
+.err{font-size:13px;color:var(--bad-fg);min-height:0}
+input[type=text],input[type=date],textarea,select{width:100%;padding:10px 12px;font-size:16px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-width:0}
+textarea{min-height:84px;resize:vertical}
+input:focus-visible,textarea:focus-visible,select:focus-visible,.btn:focus-visible,summary:focus-visible,.item:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{position:relative;display:inline-block}
+.chips input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.chips span{display:inline-block;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.chips input:checked+span{background:var(--blue-soft);border-color:var(--blue);font-weight:600}
+.chips input:focus-visible+span{outline:2px solid var(--blue);outline-offset:2px}
+.note{padding:10px 12px;border-radius:8px;background:var(--faint);font-size:14px}
+.note.warn{background:var(--warn-bg);color:var(--warn-fg)}
+.thumb{display:flex;gap:10px;align-items:center}
+.thumb img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.sum{margin:0;padding-left:20px;display:grid;gap:6px}
+details{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+summary{cursor:pointer;font-weight:600}
+details .full{display:grid;gap:10px;margin-block-start:10px;font-size:14px}
+.actions{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600}
+.btn.pri{background:var(--btn-bg);color:var(--btn-fg);border-color:transparent}
+.btn.sm{padding:6px 12px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.link{border:0;background:none;color:var(--blue);cursor:pointer;padding:0;text-decoration:underline;font-size:13px}
+.done{display:grid;gap:12px}
+.done ol{margin:0;padding-left:20px;display:grid;gap:6px}
+
+.fx{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+.plist{display:grid;gap:8px}
+.counts{display:flex;gap:8px;flex-wrap:wrap}
+.item{display:grid;gap:4px;text-align:left;width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}
+.item[aria-current="true"]{border-color:var(--blue);background:var(--blue-soft)}
+.item .r1{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.item b{min-width:0;overflow-wrap:anywhere}
+.tag{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--faint);color:var(--muted);border:1px solid var(--line)}
+.sem{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-weight:700;font-size:13px;border:1px solid;white-space:nowrap}
+.sem::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor}
+.sem.verde{background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-line)}
+.sem.amarelo{background:var(--warn-bg);color:var(--warn-fg);border-color:var(--warn-line)}
+.sem.vermelho{background:var(--bad-bg);color:var(--bad-fg);border-color:var(--bad-line)}
+.detail{display:grid;gap:16px;min-width:0}
+.dhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kv div{min-width:0;overflow-wrap:anywhere}
+.kv b{display:block;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.alerts{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.alerts li{display:flex;gap:10px}
+.alerts li::before{content:'';flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px;background:var(--muted)}
+.alerts li.vermelho::before{background:var(--bad-fg)}
+.alerts li.amarelo::before{background:var(--warn-line)}
+.alerts li.pend::before{background:transparent;border:2px solid var(--muted)}
+.ex{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.ex .grp{grid-column:1/-1;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600;padding-block:6px 4px;border-block-end:1px solid var(--line)}
+.ex .f.wide{grid-column:1/-1}
+.ex .f.w2{grid-column:span 2}
+.flag.amarelo{--fbg:var(--warn-bg);--fline:var(--warn-line);--ffg:var(--warn-fg)}
+.flag.vermelho{--fbg:var(--bad-bg);--fline:var(--bad-line);--ffg:var(--bad-fg)}
+.kv>div.flag{background:var(--fbg);color:var(--ffg);padding:8px 10px;border-radius:8px}
+.kv>div.flag b{color:var(--ffg)}
+.kv>div.flag b::after{content:' · atenção';text-transform:none;letter-spacing:0}
+.kv>div.flag.vermelho b::after{content:' · alerta'}
+.ex .f.flag input,.ex .f.flag select{background:var(--fbg);border-color:var(--fline);color:var(--ffg);font-weight:600}
+.ex .f.flag .lbl::after{content:' · fora do esperado';font-weight:400;font-size:12px;color:var(--ffg)}
+.air .row.flag{background:var(--fbg);border-radius:8px;padding:8px 10px}
+.air .row.flag b::after{content:' · alterado';font-weight:400;font-size:12px;color:var(--ffg)}
+.flagtxt.amarelo,.flagtxt.vermelho{background:var(--fbg);color:var(--ffg);padding:1px 7px;border-radius:5px;font-weight:600}
+.air{display:grid;gap:12px}
+.air .row{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:8px 12px;align-items:center}
+.air .say{font-size:13px;color:var(--muted);font-style:italic}
+.rules{font-size:14px;display:grid;gap:6px}
+.val{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.stamp{font-size:13px;color:var(--ok-fg);background:var(--ok-bg);border-radius:8px;padding:6px 10px}
+@media (max-width:860px){.fx{grid-template-columns:1fr}}
+@media (max-width:560px){.air .row{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.prog i{transition:none}}
+
+[hidden]{display:none!important}
+input[type=password],input[type=email],input[type=tel]{width:100%;padding:10px 12px;font-size:16px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-width:0}
+select{min-width:0}
+.login{max-width:420px}
+.linkbox{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--faint)}
+.linkbox code{word-break:break-all;font-size:13px}
+.row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tag.wait{background:var(--warn-bg);color:var(--warn-fg);border-color:var(--warn-line)}
+.msg{font-size:14px}
+.msg.bad{color:var(--bad-fg)}
+.msg.ok{color:var(--ok-fg)}
+a.btn{text-decoration:none;display:inline-block;color:var(--ink)}
+.topbar .btn{padding:6px 12px;font-size:13px;background:transparent;color:var(--top-fg);border-color:rgba(255,255,255,.4)}
+details .full h3{margin-block-start:6px}
+
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><b>Anexty</b><span>Health Solutions</span></div>
+  <div class="seg" id="seg" role="group" aria-label="Tela" hidden>
+    <button type="button" id="tab-fx" aria-pressed="true">Fichas</button>
+    <button type="button" id="tab-nv" aria-pressed="false">Novo convite</button>
+    <button type="button" id="tab-md" aria-pressed="false">Modelos</button>
+    <button type="button" id="tab-ac" aria-pressed="false">Conta</button>
+  </div>
+  <button type="button" class="btn" id="logout" hidden>Sair</button>
+</div>
+<main class="wrap">
+  <section id="v-login" class="pt" aria-label="Entrar" hidden></section>
+  <section id="v-pt" class="pt" aria-label="Formulário da paciente" hidden></section>
+  <section id="v-fx" class="fx" aria-label="Fichas" hidden>
+    <aside class="plist" id="plist"></aside>
+    <div class="detail" id="detail"></div>
+  </section>
+  <section id="v-nv" class="pt" aria-label="Novo convite" hidden></section>
+  <section id="v-md" class="pt" aria-label="Modelos de texto" hidden></section>
+  <section id="v-ac" class="pt" aria-label="Conta" hidden></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
+<script>
+/* ===== Lógica de triagem (sem interface) ===== */
+(function(){
+  var DOENCAS=['Pressão alta','Diabetes','Asma ou bronquite','Problema no coração','Tireoide','Refluxo ou azia forte','Trombose ou coágulos','Anemia','Outra','Nenhuma dessas'];
+  var PROBLEMAS=['Enjoo ou vômito forte depois','Dificuldade para respirar ou colocar o tubo','Reação alérgica','Acordei durante a anestesia','Febre alta ou rigidez no corpo','Outro problema','Nenhum problema'];
+  var DENTES=['Dente mole','Prótese ou ponte','Aparelho nos dentes','Piercing na boca ou língua','Outro','Nenhum desses'];
+  function parseNum(v){ if(v===null||v===undefined||v==='')return null; var n=parseFloat(String(v).replace(',','.')); return isNaN(n)?null:n; }
+  function fmt(n){ return String(Math.round(n*10)/10).replace('.',','); }
+  function bmi(p){ var w=parseNum(p.peso),h=parseNum(p.altura); if(!w||!h)return null; return w/Math.pow(h/100,2); }
+  function toDate(s){ return new Date(s+'T00:00:00'); }
+  function nowBR(){ var d=new Date(); function z(n){ return ('0'+n).slice(-2); } return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' '+z(d.getHours())+':'+z(d.getMinutes()); }
+  function cnt(v){ if(v===null||v===undefined||v==='')return null; var s=String(v).trim(); if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,''); return parseNum(s); }
+  function leuco(v){ var n=cnt(v); if(n===null)return null; return n<100?n*1000:n; }
+  function plaq(v){ var n=cnt(v); if(n===null)return null; return n>=1000?n/1000:n; }
+  /* [campo, nome, leitura, mínimo, máximo, unidade]. Faixas de adulto, variam entre laboratórios. */
+  var LABCHK=[
+    ['ht','Hematócrito',parseNum,34,55,'%'],
+    ['leuc','Leucócitos',leuco,3500,12000,'/mm³'],
+    ['tap','TAP (atividade)',parseNum,70,null,'%'],
+    ['ttpa','TTPa',parseNum,null,40,'s'],
+    ['ureia','Ureia',parseNum,null,50,'mg/dL'],
+    ['creat','Creatinina',parseNum,null,1.2,'mg/dL'],
+    ['na','Sódio',parseNum,135,145,'mEq/L'],
+    ['k','Potássio',parseNum,3.5,5,'mEq/L'],
+    ['ca','Cálcio',parseNum,8.5,10.5,'mg/dL'],
+    ['mg','Magnésio',parseNum,1.6,2.6,'mg/dL'],
+    ['tgo','TGO',parseNum,null,60,'U/L'],
+    ['tgp','TGP',parseNum,null,60,'U/L'],
+    ['glic','Glicemia',parseNum,70,126,'mg/dL']
+  ];
+  function ageOf(p,ref){ if(!p.nascimento)return null; var n=toDate(p.nascimento),r=ref||new Date(); var a=r.getFullYear()-n.getFullYear(); var m=r.getMonth()-n.getMonth(); if(m<0||(m===0&&r.getDate()<n.getDate()))a--; return a; }
+  function daysBetween(a,b){ return Math.round((toDate(b)-toDate(a))/86400000); }
+  function has(list,x){ return (list||[]).indexOf(x)>=0; }
+  function triage(p){
+    var R=[]; function add(l,t){ R.push({l:l,t:t}); }
+    var f=p.ficha||{}, ex=f.exames||{}, v=f.via||{};
+    var d=p.doencas||[], pr=p.anest_problemas||[], dn=p.dentes||[];
+    var b=bmi(p), a=ageOf(p);
+    if(b!==null){ if(b>=40)add('vermelho','IMC '+fmt(b)+' (40 ou mais)'); else if(b>=30)add('amarelo','IMC '+fmt(b)+' (30 a 39,9)'); }
+    if(a!==null&&a>=60)add('amarelo','Idade de '+a+' anos');
+    if(has(d,'Problema no coração'))add('vermelho','Problema no coração');
+    if(has(d,'Trombose ou coágulos'))add('vermelho','Trombose ou coágulos no histórico');
+    if(has(d,'Outra'))add('amarelo','Outra condição informada: '+(p.doencas_outras||'sem descrição')+'. Avaliar caso a caso');
+    [['Pressão alta','Pressão alta'],['Diabetes','Diabetes'],['Asma ou bronquite','Asma ou bronquite'],['Tireoide','Problema de tireoide'],['Refluxo ou azia forte','Refluxo ou azia forte'],['Anemia','Anemia']].forEach(function(k){ if(has(d,k[0]))add('amarelo',k[1]); });
+    if(p.anticoag==='sim')add('vermelho','Usa anticoagulante ou AAS: definir suspensão junto com o cirurgião');
+    if(p.emagrecedor==='sim')add('amarelo','Caneta emagrecedora: definir jejum e conduta'+(p.emagrecedor_qual?' ('+p.emagrecedor_qual+')':''));
+    if(p.hormonio==='sim')add('amarelo','Hormônio em uso: risco de trombose, avaliar profilaxia'+(p.hormonio_qual?' ('+p.hormonio_qual+')':''));
+    if(p.alergia==='sim')add('amarelo','Alergia referida'+(p.alergia_qual?': '+p.alergia_qual:''));
+    if(p.tabaco==='atual')add('amarelo','Fuma ou usa vape');
+    if(p.alcool==='diario')add('amarelo','Álcool todos os dias');
+    var sup=(p.suplementos||'').trim();
+    if(sup&&!/^(n[aã]o|nenhum)/i.test(sup))add('amarelo','Suplementos ou fitoterápicos: conferir efeito sobre sangramento');
+    var oi=(p.outras_info||'').trim();
+    if(oi&&!/^(n[aã]o|nenhum)/i.test(oi))add('amarelo','Paciente escreveu informação adicional: ler e avaliar');
+    if(has(pr,'Dificuldade para respirar ou colocar o tubo'))add('vermelho','Dificuldade prévia com respiração ou tubo');
+    if(has(pr,'Febre alta ou rigidez no corpo')||p.familia==='sim')add('vermelho','Febre/rigidez em anestesia anterior ou problema grave na família: investigar hipertermia maligna');
+    if(has(pr,'Enjoo ou vômito forte depois'))add('amarelo','Enjoo forte em anestesia anterior: planejar prevenção');
+    if(has(pr,'Reação alérgica'))add('amarelo','Reação alérgica em anestesia anterior');
+    if(has(pr,'Outro problema'))add('amarelo','Outro problema em anestesia anterior: '+(p.anest_problemas_outros||'sem descrição'));
+    if(has(pr,'Acordei durante a anestesia'))add('amarelo','Relato de ter acordado durante a anestesia');
+    if(p.paradas==='sim'){ if(b!==null&&b>=35)add('vermelho','Pausas respiratórias no sono com IMC alto: suspeita de apneia'); else add('amarelo','Pausas respiratórias no sono'); }
+    if(p.ronco==='alto')add('amarelo','Ronco alto');
+    var dz=dn.filter(function(x){return !/^Nenhum/.test(x);}).map(function(x){ return x==='Outro'?('outro'+(p.dentes_outros?': '+p.dentes_outros:'')):x.toLowerCase(); });
+    if(dz.length)add('amarelo','Boca e dentes: '+dz.join(', '));
+    if(p.gravida==='sim'||p.gravida==='talvez')add('vermelho','Possível gravidez: confirmar antes de qualquer conduta');
+    if(p.transfusao==='nao_autorizo')add('vermelho','Não autoriza transfusão de sangue: planejar a anestesia e a conduta com isso em mente');
+    else if(p.transfusao==='conversar')add('vermelho','Quer conversar sobre transfusão: tratar na videoconsulta e registrar a decisão');
+    var hb=parseNum(ex.hb), pl=plaq(ex.plaq), inr=parseNum(ex.inr), a1c=parseNum(ex.hba1c);
+    if(hb!==null){ if(hb<10)add('vermelho','Hemoglobina '+fmt(hb)+' g/dL'); else if(hb<12)add('amarelo','Hemoglobina '+fmt(hb)+' g/dL'); }
+    if(pl!==null){ if(pl<100)add('vermelho','Plaquetas '+fmt(pl)+' mil/mm³'); else if(pl<150)add('amarelo','Plaquetas '+fmt(pl)+' mil/mm³'); }
+    if(inr!==null){ if(inr>1.4)add('vermelho','INR '+fmt(inr)); else if(inr>1.2)add('amarelo','INR '+fmt(inr)); }
+    if(a1c!==null){ if(a1c>=8)add('vermelho','HbA1c '+fmt(a1c)+'%: avaliar adiar até o controle do diabetes'); else if(a1c>=6.5)add('amarelo','HbA1c '+fmt(a1c)+'%'); }
+    LABCHK.forEach(function(c){ var n=c[2](ex[c[0]]); if(n===null)return; if(c[3]!==null&&n<c[3])add('amarelo',c[1]+' '+fmt(n)+' '+c[5]+', abaixo de '+fmt(c[3])); else if(c[4]!==null&&n>c[4])add('amarelo',c[1]+' '+fmt(n)+' '+c[5]+', acima de '+fmt(c[4])); });
+    if(ex.ecg==='alterado')add('amarelo','ECG alterado'+(ex.ecg_desc?': '+ex.ecg_desc:''));
+    if(ex.eco==='alterado')add('amarelo','Ecocardiograma alterado'+(ex.eco_desc?': '+ex.eco_desc:''));
+    if(ex.risco==='ressalvas')add('amarelo','Risco cirúrgico liberado com ressalvas');
+    if(ex.risco==='nao')add('vermelho','Risco cirúrgico não liberado');
+    if(ex.data&&p.data_cirurgia){ var dd=daysBetween(ex.data,p.data_cirurgia); if(dd>90)add('amarelo','Exames com '+dd+' dias na data da cirurgia'); }
+    var al=[];
+    if(v.mall==='III'||v.mall==='IV')al.push('Mallampati '+v.mall);
+    if(v.boca==='menos3')al.push('abertura de boca menor que 3 dedos');
+    if(v.tmd==='menos3')al.push('distância queixo-pescoço menor que 3 dedos');
+    if(v.mordida==='nao')al.push('não projeta a mandíbula');
+    if(v.pescoco==='limitado')al.push('pescoço com pouca mobilidade');
+    if(al.length)add('vermelho','Alerta de via aérea ('+al.join('; ')+'): reavaliar presencialmente antes da cirurgia');
+    if(v.qualidade==='inconclusiva')add('amarelo','Via aérea inconclusiva na vídeo: reavaliar no dia');
+    var order={vermelho:0,amarelo:1};
+    R.sort(function(x,y){return order[x.l]-order[y.l];});
+    var level=R.some(function(x){return x.l==='vermelho';})?'vermelho':(R.some(function(x){return x.l==='amarelo';})?'amarelo':'verde');
+    return {level:level,reasons:R};
+  }
+  function pendencias(p){
+    var f=p.ficha||{}, ex=f.exames||{}, v=f.via||{}, out=[];
+    if(!ex.data||ex.hb===''||ex.hb===undefined)out.push('Resultados de exames ainda não lançados');
+    if(!ex.risco||ex.risco==='pendente')out.push('Risco cirúrgico pendente');
+    if(!v.mall)out.push('Via aérea ainda não avaliada na videoconsulta');
+    if(!f.anest1)out.push('Tipo de anestesia ainda não definido');
+    if(!p.tcle_aceite)out.push('Termo de consentimento ainda não aceito');
+    return out;
+  }
+  /* [código, nome, explicação em linguagem simples para a paciente] */
+  var ANEST=[
+    ['geral','Anestesia geral','Você fica totalmente dormindo, sem sentir dor e sem lembrar do procedimento. Os medicamentos são dados na veia e, quando necessário, usamos um tubo ou uma máscara para ajudar na respiração. Ao acordar, é comum sentir sonolência, dor de garganta leve, enjoo ou tremores, que costumam passar logo.'],
+    ['geral_bloq','Anestesia geral com bloqueio regional','Além de dormir, como na anestesia geral, aplicamos um anestésico perto dos nervos da região operada, geralmente guiado por ultrassom. Isso diminui a dor durante e depois da cirurgia e reduz a necessidade de outros analgésicos. A região pode ficar dormente por várias horas.'],
+    ['sedacao','Sedação com anestesia local','Você fica relaxada e sonolenta, respirando sozinha, enquanto o cirurgião aplica anestesia local na região. Em geral você não sente dor e não lembra do procedimento. Se a sedação não for suficiente, podemos passar para a anestesia geral.'],
+    ['raqui','Raquianestesia (com ou sem sedação)','O anestésico é aplicado nas costas, na região lombar. A parte de baixo do corpo fica dormente e sem movimento por algumas horas. Você pode ficar acordada ou receber sedação para dormir. Pode haver coceira, queda de pressão, dor nas costas e, mais raramente, dor de cabeça depois.'],
+    ['peri','Peridural (com ou sem sedação)','O anestésico é aplicado nas costas, geralmente por um cateter fino que permite repetir ou ajustar a dose. A parte de baixo do corpo fica dormente. Você pode ficar acordada ou receber sedação. Os efeitos possíveis são parecidos com os da raquianestesia.'],
+    ['bloq','Bloqueio regional com sedação','Aplicamos o anestésico perto dos nervos que cuidam da região operada, em geral com ultrassom, e damos sedação para você ficar tranquila. A região fica sem dor e dormente por várias horas.'],
+    ['outra','Outra (escrever)','']
+  ];
+  function anestLabel(code,outra){
+    if(!code)return '';
+    if(code==='nenhuma')return 'Sem alternativa prevista';
+    if(code==='outra')return 'Outra: '+(outra||'sem descrição');
+    for(var i=0;i<ANEST.length;i++){ if(ANEST[i][0]===code)return ANEST[i][1]; }
+    return code;
+  }
+  function anestDesc(code){ for(var i=0;i<ANEST.length;i++){ if(ANEST[i][0]===code)return ANEST[i][2]; } return ''; }
+
+  /* [grupo, [[campo, nome, unidade]]] */
+  var LABGROUPS=[
+    ['Hemograma',[['hb','Hemoglobina (Hb)','g/dL'],['ht','Hematócrito (Ht)','%'],['leuc','Leucócitos','/mm³'],['plaq','Plaquetas','mil/mm³']]],
+    ['Coagulação',[['tp','TP','segundos'],['tap','TAP (atividade)','%'],['inr','INR','sem unidade'],['ttpa','TTPa','segundos']]],
+    ['Função renal e eletrólitos',[['ureia','Ureia','mg/dL'],['creat','Creatinina','mg/dL'],['na','Sódio','mEq/L'],['k','Potássio','mEq/L'],['ca','Cálcio','mg/dL'],['mg','Magnésio','mg/dL']]],
+    ['Fígado',[['tgo','TGO (AST)','U/L'],['tgp','TGP (ALT)','U/L']]],
+    ['Glicose',[['glic','Glicemia','mg/dL'],['hba1c','HbA1c','%']]]
+  ];
+
+  var KEYMAP={'Problemas de saúde':'doencas','Caneta emagrecedora':'emagrecedor','Hormônio':'hormonio','Anticoagulante ou AAS':'anticoag','Suplementos':'suplementos','Suplementos e chás':'suplementos','Alergia':'alergia','Fumo / álcool':'tabalc','Fumo e álcool':'tabalc','Anestesia anterior':'anest_problemas','Problema na família':'familia','Problema grave na família':'familia','Ronco / pausas no sono':'sono','Ronco e pausas no sono':'sono','Boca e dentes':'dentes','Chance de gravidez':'gravida','Transfusão de sangue':'transfusao','Outras informações':'outras_info','Mallampati':'via.mall','Abertura da boca':'via.boca','Distância queixo-pescoço':'via.tmd','Mordida do lábio':'via.mordida','Mobilidade do pescoço':'via.pescoco','Qualidade da avaliação':'via.qualidade','ECG':'exames.ecg','Ecocardiograma':'exames.eco','Risco cirúrgico':'exames.risco','Data dos exames':'exames.data'};
+  LABGROUPS.forEach(function(g){ g[1].forEach(function(c){ KEYMAP[c[1]]='exames.'+c[0]; }); });
+
+  /* Campo -> 'amarelo' | 'vermelho' quando a resposta ou o resultado foge do esperado */
+  function fieldFlags(p){
+    var F={}, f=p.ficha||{}, ex=f.exames||{}, v=f.via||{};
+    var d=p.doencas||[], pr=p.anest_problemas||[], dn=p.dentes||[], b=bmi(p), a=ageOf(p);
+    function set(k,l){ if(F[k]==='vermelho'&&l!=='vermelho')return; F[k]=l; }
+    function nz(arr,re){ return arr.filter(function(x){ return !re.test(x); }).length>0; }
+    if(b!==null){ if(b>=40)set('imc','vermelho'); else if(b>=30)set('imc','amarelo'); }
+    if(a!==null&&a>=60)set('idade','amarelo');
+    if(nz(d,/^Nenhuma/))set('doencas',(has(d,'Problema no coração')||has(d,'Trombose ou coágulos'))?'vermelho':'amarelo');
+    if(p.emagrecedor==='sim')set('emagrecedor','amarelo');
+    if(p.hormonio==='sim')set('hormonio','amarelo');
+    if(p.anticoag==='sim')set('anticoag','vermelho');
+    var sup=(p.suplementos||'').trim(); if(sup&&!/^(n[aã]o|nenhum)/i.test(sup))set('suplementos','amarelo');
+    if(p.alergia==='sim')set('alergia','amarelo');
+    if(p.tabaco==='atual'||p.alcool==='diario')set('tabalc','amarelo');
+    if(nz(pr,/^Nenhum/))set('anest_problemas',(has(pr,'Dificuldade para respirar ou colocar o tubo')||has(pr,'Febre alta ou rigidez no corpo'))?'vermelho':'amarelo');
+    if(p.familia==='sim')set('familia','vermelho');
+    if(p.paradas==='sim')set('sono',(b!==null&&b>=35)?'vermelho':'amarelo'); else if(p.ronco==='alto')set('sono','amarelo');
+    if(nz(dn,/^Nenhum/))set('dentes','amarelo');
+    if(p.gravida==='sim'||p.gravida==='talvez')set('gravida','vermelho');
+    if(p.transfusao==='nao_autorizo'||p.transfusao==='conversar')set('transfusao','vermelho');
+    var oi=(p.outras_info||'').trim(); if(oi&&!/^(n[aã]o|nenhum)/i.test(oi))set('outras_info','amarelo');
+    var hb=parseNum(ex.hb), pl=plaq(ex.plaq), inr=parseNum(ex.inr), a1c=parseNum(ex.hba1c);
+    if(hb!==null){ if(hb<10)set('exames.hb','vermelho'); else if(hb<12)set('exames.hb','amarelo'); }
+    if(pl!==null){ if(pl<100)set('exames.plaq','vermelho'); else if(pl<150)set('exames.plaq','amarelo'); }
+    if(inr!==null){ if(inr>1.4)set('exames.inr','vermelho'); else if(inr>1.2)set('exames.inr','amarelo'); }
+    if(a1c!==null){ if(a1c>=8)set('exames.hba1c','vermelho'); else if(a1c>=6.5)set('exames.hba1c','amarelo'); }
+    LABCHK.forEach(function(c){ var n=c[2](ex[c[0]]); if(n===null)return; if((c[3]!==null&&n<c[3])||(c[4]!==null&&n>c[4]))set('exames.'+c[0],'amarelo'); });
+    if(ex.ecg==='alterado')set('exames.ecg','amarelo');
+    if(ex.eco==='alterado')set('exames.eco','amarelo');
+    if(ex.risco==='ressalvas')set('exames.risco','amarelo'); else if(ex.risco==='nao')set('exames.risco','vermelho');
+    if(ex.data&&p.data_cirurgia&&daysBetween(ex.data,p.data_cirurgia)>90)set('exames.data','amarelo');
+    if(v.mall==='III'||v.mall==='IV')set('via.mall','vermelho');
+    if(v.boca==='menos3')set('via.boca','vermelho');
+    if(v.tmd==='menos3')set('via.tmd','vermelho');
+    if(v.mordida==='nao')set('via.mordida','vermelho');
+    if(v.pescoco==='limitado')set('via.pescoco','vermelho');
+    if(v.qualidade==='inconclusiva')set('via.qualidade','amarelo');
+    return F;
+  }
+
+  /* ===== PDF da ficha (recebe o construtor do jsPDF) ===== */
+  function buildPdf(p,Ctor,mode){
+    var doc=new Ctor({unit:'pt',format:'a4'});
+    var W=595.28,H=841.89,M=40,CW=W-2*M,y=0;
+    var NAVY=[11,37,64],MUT=[94,113,137],LINE=[208,220,232];
+    var f=p.ficha||{},ex=f.exames||{},v=f.via||{},t=triage(p),pend=pendencias(p);
+    var b=bmi(p),a=ageOf(p);
+    var ff=fieldFlags(p);
+    var MED='Dra. Layla Praça Agra · CRM-PB 17284';
+    var TRF={autorizo:'Autoriza',nao_autorizo:'NÃO autoriza',conversar:'Quer conversar na videoconsulta'};
+    var TRP={autorizo:'você autoriza a transfusão, em último caso e só se for necessária para proteger sua vida ou sua saúde',nao_autorizo:'você não autoriza a transfusão de sangue',conversar:'você quer conversar sobre isso na videoconsulta'};
+    function flagPairs(pairs){ return pairs.map(function(pr){ var k=KEYMAP[pr[0]]; return (k&&ff[k])?[pr[0],pr[1],ff[k]]:pr; }); }
+    doc.setLineHeightFactor(1.2);
+    function tc(c){ doc.setTextColor(c[0],c[1],c[2]); }
+    function bd(s){ if(!s)return '—'; var q=s.split('-'); return q[2]+'/'+q[1]+'/'+q[0]; }
+    function val(x){ return (x===undefined||x===null||String(x).trim()==='')?'—':String(x); }
+    function lo(arr,txt){ if(!arr||!arr.length)return '—'; return arr.map(function(x){ return /^Outr/.test(x)?(x+(txt?': '+txt:'')):x; }).join(', '); }
+    function yn(x){ return x==='sim'?'Sim':(x==='nao'?'Não':(x==='nsei'?'Não sei':'—')); }
+    function room(h){ if(y+h>H-48){ doc.addPage(); y=M; } }
+    function sec(title){ room(40); y+=8; doc.setFont('helvetica','bold'); doc.setFontSize(9); tc(MUT); doc.text(title.toUpperCase(),M,y); y+=4; doc.setDrawColor(LINE[0],LINE[1],LINE[2]); doc.setLineWidth(0.6); doc.line(M,y,W-M,y); y+=14; }
+    function kv(pairs,cols){
+      var cw=CW/cols;
+      for(var i=0;i<pairs.length;i+=cols){
+        var row=pairs.slice(i,i+cols),lines=[],mx=1;
+        doc.setFont('helvetica','normal'); doc.setFontSize(10);
+        row.forEach(function(pr){ var ls=doc.splitTextToSize(String(pr[1])+(pr[2]?' (!)':''),cw-10); lines.push(ls); if(ls.length>mx)mx=ls.length; });
+        room(12+mx*12+6);
+        row.forEach(function(pr,k){ var x=M+k*cw; if(pr[2]){ var fc=pr[2]==='vermelho'?[253,227,225]:[255,241,204]; doc.setFillColor(fc[0],fc[1],fc[2]); doc.rect(x-5,y-10,cw-4,12+mx*12+2,'F'); } doc.setFont('helvetica','bold'); doc.setFontSize(8); tc(MUT); doc.text(pr[0],x,y); doc.setFont('helvetica','normal'); doc.setFontSize(10); tc(NAVY); doc.text(lines[k],x,y+12); });
+        y+=12+mx*12+6;
+      }
+    }
+    function para(txt,size){
+      size=size||10; doc.setFont('helvetica','normal'); doc.setFontSize(size); tc(NAVY);
+      var lh=size*1.25;
+      String(txt).split(/\r?\n/).forEach(function(line){
+        if(line.trim()===''){ y+=lh*0.6; return; }
+        doc.splitTextToSize(line,CW).forEach(function(l){ room(lh); doc.text(l,M,y); y+=lh; });
+      });
+      y+=4;
+    }
+    function lab(text){ room(24); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); tc(MUT); doc.text(text.toUpperCase(),M,y); y+=12; }
+
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]); doc.rect(0,0,W,52,'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text(mode==='paciente'?'Orientações para a sua anestesia':'Ficha de avaliação pré-anestésica',M,32);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text('Anexty Health Solutions',W-M,32,{align:'right'});
+    if(mode!=='paciente'){ doc.setFontSize(8); doc.text('USO INTERNO · não enviar à paciente',W-M,44,{align:'right'}); }
+    y=70;
+
+    if(mode==='paciente'){
+      /* Versão para a paciente: sem triagem, ASA, exames nem observações da anestesista */
+      kv([['Paciente',val(p.nome)],['Data da cirurgia',bd(p.data_cirurgia)],['Hospital',val(p.hospital)],['Cirurgião',val(p.cirurgiao)],['Cirurgia',val(p.procedimento)]],2);
+      if(f.anest1){ sec('Anestesia planejada'); kv([['Tipo planejado',anestLabel(f.anest1,f.anest1_outra)],['Alternativa, se for preciso',f.anest2?anestLabel(f.anest2,f.anest2_outra):'—']],2); }
+      if(p.transfusao){ sec('Transfusão de sangue'); para('Decisão registrada: '+(TRP[p.transfusao]||'—')+'.'); }
+      sec('Orientações'); para(val(f.orient));
+      sec('Termo de consentimento');
+      para(p.tcle_aceite?('Aceito em '+val(p.tcle_quando)+' por '+val(p.tcle_nome)+'. Versão do termo: '+val(p.tcle_versao)+'.'):'Termo ainda não aceito.');
+      room(80); y+=40;
+      doc.setDrawColor(NAVY[0],NAVY[1],NAVY[2]); doc.setLineWidth(0.6); doc.line(M,y,M+230,y); y+=12;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); tc(MUT); doc.text(MED,M,y);
+      return finish();
+    }
+    kv([['Paciente',val(p.nome)],['Nascimento',bd(p.nascimento)+(a!==null?' ('+a+' anos)':'')],
+        ['Peso / altura / IMC',val(p.peso)+' kg · '+val(p.altura)+' cm'+(b!==null?' · IMC '+fmt(b):'')],['Classificação ASA',f.asa?'ASA '+f.asa:'—'],
+        ['Data da cirurgia',bd(p.data_cirurgia)],['Hospital',val(p.hospital)],['Cirurgião',val(p.cirurgiao)],['Cirurgia',val(p.procedimento)]],2);
+
+    sec('Triagem de risco');
+    var col={verde:[46,125,50],amarelo:[196,140,0],vermelho:[185,40,40]}[t.level];
+    doc.setFillColor(col[0],col[1],col[2]); doc.roundedRect(M,y-10,86,18,4,4,'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.text(t.level.toUpperCase(),M+43,y+3,{align:'center'}); y+=26;
+    if(t.reasons.length){ t.reasons.forEach(function(r){ para('• '+r.t); }); } else { para('Nenhum alerta nas respostas.'); }
+    if(pend.length){ lab('Pendências'); pend.forEach(function(x){ para('• '+x); }); }
+
+    sec('Respostas da paciente');
+    kv(flagPairs([['Problemas de saúde',lo(p.doencas,p.doencas_outras)],['Remédios em uso',val(p.medicacoes)],
+        ['Caneta emagrecedora',yn(p.emagrecedor)+(p.emagrecedor_qual?' · '+p.emagrecedor_qual:'')],['Hormônio',yn(p.hormonio)+(p.hormonio_qual?' · '+p.hormonio_qual:'')],
+        ['Anticoagulante ou AAS',yn(p.anticoag)],['Suplementos e chás',val(p.suplementos)],
+        ['Alergia',yn(p.alergia)+(p.alergia_qual?' · '+p.alergia_qual:'')],['Fumo e álcool',({nunca:'Nunca fumou',ex:'Ex-fumante',atual:'Fuma ou usa vape'}[p.tabaco]||'—')+' · '+({nenhum:'Não bebe',social:'Bebe socialmente',diario:'Bebe todos os dias'}[p.alcool]||'—')],
+        ['Anestesia anterior',yn(p.anest_previa)+(p.anest_problemas?' · '+lo(p.anest_problemas,p.anest_problemas_outros):'')],['Problema grave na família',yn(p.familia)],
+        ['Ronco e pausas no sono',({nao:'Não ronca',as_vezes:'Ronca às vezes',alto:'Ronco alto'}[p.ronco]||'—')+' · pausas: '+yn(p.paradas)],['Boca e dentes',lo(p.dentes,p.dentes_outros)],
+        ['Chance de gravidez',({nao:'Não',talvez:'Talvez',sim:'Sim'}[p.gravida]||'—')],['Transfusão de sangue',TRF[p.transfusao]||'—'],['Outras informações',val(p.outras_info)]]),2);
+
+    sec('Resultados de exames');
+    kv(flagPairs([['Data dos exames',bd(ex.data)],['Risco cirúrgico',({liberado:'Liberado',ressalvas:'Liberado com ressalvas',nao:'Não liberado',pendente:'Pendente'}[ex.risco]||'—')]]),2);
+    LABGROUPS.forEach(function(g){
+      room(48); doc.setFont('helvetica','bold'); doc.setFontSize(9); tc(NAVY); doc.text(g[0],M,y); y+=12;
+      kv(flagPairs(g[1].map(function(c){ var x=ex[c[0]]; var has=!(x===undefined||x===null||String(x).trim()===''); return [c[1],has?(String(x)+(c[2]==='sem unidade'?'':' '+c[2])):'—']; })),4);
+    });
+    var ST={normal:'Normal',alterado:'Alterado',nao:'Não realizado'};
+    kv(flagPairs([['ECG',(ST[ex.ecg]||'—')+(ex.ecg_desc?' · '+ex.ecg_desc:'')],['Ecocardiograma',(ST[ex.eco]||'—')+(ex.eco_desc?' · '+ex.eco_desc:'')],
+        ['Exame de imagem',val(ex.img_desc)],['Outros exames',val(ex.outros)]]),1);
+
+    sec('Via aérea (videoconsulta)');
+    kv(flagPairs([['Mallampati',v.mall?'Classe '+v.mall:'—'],['Abertura da boca',({mais3:'3 dedos ou mais',menos3:'Menos de 3 dedos'}[v.boca]||'—')],
+        ['Distância queixo-pescoço',({mais3:'3 dedos ou mais',menos3:'Menos de 3 dedos'}[v.tmd]||'—')],['Mordida do lábio',({sim:'Consegue',nao:'Não consegue'}[v.mordida]||'—')],
+        ['Mobilidade do pescoço',({normal:'Normal',limitado:'Limitada'}[v.pescoco]||'—')],['Qualidade da avaliação',({adequada:'Adequada',inconclusiva:'Inconclusiva'}[v.qualidade]||'—')]]),3);
+    if(v.outros)kv([['Outros achados',v.outros]],1);
+
+    sec('Conduta e decisão');
+    kv([['Decisão',({liberada:'Liberada',ressalvas:'Liberada com ressalvas',presencial:'Reavaliar presencialmente',adiar:'Adiar ou pedir exames'}[f.decisao]||'—')],
+        ['Anestesia planejada (1ª opção)',f.anest1?anestLabel(f.anest1,f.anest1_outra):'—'],['Alternativa (2ª opção)',f.anest2?anestLabel(f.anest2,f.anest2_outra):'—']],3);
+    if(f.anest_motivo)kv([['Quando a alternativa será usada',f.anest_motivo]],1);
+    lab('Observações e conduta'); para(val(f.conduta));
+
+    sec('Orientações à paciente'); para(val(f.orient));
+
+    sec('Termo de consentimento');
+    para(p.tcle_aceite?('Aceito em '+val(p.tcle_quando)+' por '+val(p.tcle_nome)+'. Versão do termo: '+val(p.tcle_versao)+'.'):'Termo ainda não aceito pela paciente.');
+
+    sec('Validação');
+    para(f.validacao?('Validada em '+f.validacao.quando+' · '+f.validacao.decisao+'.'):'Aguardando validação da anestesista.');
+    room(80); y+=40;
+    doc.setDrawColor(NAVY[0],NAVY[1],NAVY[2]); doc.setLineWidth(0.6);
+    doc.line(M,y,M+230,y); doc.line(W-M-230,y,W-M,y); y+=12;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); tc(MUT);
+    doc.text(MED,M,y); doc.text('Paciente',W-M-230,y);
+
+    return finish();
+
+    function finish(){
+      var n=doc.getNumberOfPages(), gen=nowBR();
+      for(var i=1;i<=n;i++){
+        doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); tc(MUT);
+        doc.text((p.example?'EXEMPLO COM DADOS FICTÍCIOS · ':'')+(mode==='paciente'?'':'USO INTERNO · ')+val(p.nome)+' · Gerado em '+gen,M,H-26);
+        doc.text('Página '+i+' de '+n,W-M,H-26,{align:'right'});
+      }
+      return doc;
+    }
+  }
+
+  window.APA_LOGIC={triage:triage,pendencias:pendencias,bmi:bmi,ageOf:ageOf,parseNum:parseNum,fmt:fmt,daysBetween:daysBetween,DOENCAS:DOENCAS,PROBLEMAS:PROBLEMAS,DENTES:DENTES,LABGROUPS:LABGROUPS,buildPdf:buildPdf,fieldFlags:fieldFlags,KEYMAP:KEYMAP,nowBR:nowBR,ANEST:ANEST,anestLabel:anestLabel,anestDesc:anestDesc};
+
+})();
+</script>
+<script>
+/* ===== Interface ===== */
+(function(){
+  var L=window.APA_LOGIC;
+  function $(s,r){ return (r||document).querySelector(s); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function iso(off){ var d=new Date(); d.setDate(d.getDate()+off); var m=('0'+(d.getMonth()+1)).slice(-2), dd=('0'+d.getDate()).slice(-2); return d.getFullYear()+'-'+m+'-'+dd; }
+  function brDate(s){ if(!s)return '—'; var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+  var SN=[['sim','Sim'],['nao','Não']];
+  function opts(list){ return list.map(function(x){ return [x,x]; }); }
+
+  var STEPS=[
+    {id:'cirurgia',title:'Sua cirurgia',intro:'Confirme os dados que o cirurgião enviou para a anestesia.',fields:[
+      {id:'data_cirurgia',type:'date',label:'Data da cirurgia',req:1},
+      {id:'hospital',type:'text',label:'Hospital ou clínica',list:['Hospital HELP'],ph:'Onde será a cirurgia'},
+      {id:'cirurgiao',type:'text',label:'Nome do cirurgião',req:1,ph:'Nome do médico'},
+      {id:'procedimento',type:'text',label:'Cirurgia que vai fazer',ph:'Ex.: abdominoplastia'}]},
+    {id:'voce',title:'Sobre você',intro:'Usamos peso e altura para planejar a anestesia.',fields:[
+      {id:'nome',type:'text',label:'Nome completo',req:1},
+      {id:'nascimento',type:'date',label:'Data de nascimento',req:1},
+      {id:'peso',type:'text',label:'Peso (kg)',req:1,inputmode:'decimal',ph:'Ex.: 62,5'},
+      {id:'altura',type:'text',label:'Altura (cm)',req:1,inputmode:'numeric',ph:'Ex.: 165'}],post:'bmi'},
+    {id:'saude',title:'Sua saúde',intro:'Responda o que souber. Marque “Nenhuma dessas” se não tiver nada.',fields:[
+      {id:'doencas',type:'check',label:'Você tem ou já teve algum destes problemas?',options:opts(L.DOENCAS)},
+      {id:'doencas_outras',type:'text',label:'Qual outra condição?',req:1,hint:'Escreva como souber, mesmo sem o nome técnico.',show:function(d){return (d.doencas||[]).indexOf('Outra')>=0;}},
+      {id:'medicacoes',type:'area',label:'Remédios que usa todos os dias',hint:'Nome e dose, se souber. Se não usa, escreva “nenhum”.'},
+      {id:'emagrecedor',type:'radio',label:'Usa ou já usou caneta ou injeção para emagrecer (Ozempic, Wegovy, Mounjaro, Saxenda)?',options:SN},
+      {id:'emagrecedor_qual',type:'text',label:'Qual caneta e quando foi a última aplicação?',show:function(d){return d.emagrecedor==='sim';}},
+      {id:'hormonio',type:'radio',label:'Usa anticoncepcional, DIU hormonal ou reposição hormonal?',options:SN},
+      {id:'hormonio_qual',type:'text',label:'Qual?',show:function(d){return d.hormonio==='sim';}},
+      {id:'anticoag',type:'radio',label:'Usa remédio para afinar o sangue ou aspirina?',options:SN},
+      {id:'suplementos',type:'area',label:'Vitaminas, suplementos, chás ou fitoterápicos',hint:'Alguns aumentam o risco de sangramento.'},
+      {id:'alergia',type:'radio',label:'Tem alergia a remédio, látex ou alimento?',options:SN},
+      {id:'alergia_qual',type:'text',label:'A que e qual reação?',show:function(d){return d.alergia==='sim';}},
+      {id:'tabaco',type:'radio',label:'Cigarro ou vape',options:[['nunca','Nunca usei'],['ex','Já usei, parei'],['atual','Uso hoje']]},
+      {id:'alcool',type:'radio',label:'Bebida alcoólica',options:[['nenhum','Não bebo'],['social','De vez em quando'],['diario','Todos os dias']]},
+      {id:'outras_info',type:'area',label:'Mais alguma informação sobre sua saúde?',hint:'Qualquer coisa que não apareceu nas perguntas acima. Se não houver, deixe em branco.'}]},
+    {id:'anestesia',title:'Anestesias anteriores',intro:'Isso ajuda a escolher a técnica mais segura.',fields:[
+      {id:'anest_previa',type:'radio',label:'Já fez alguma cirurgia com anestesia?',options:SN},
+      {id:'anest_problemas',type:'check',label:'Teve algum destes problemas?',options:opts(L.PROBLEMAS),show:function(d){return d.anest_previa==='sim';}},
+      {id:'anest_problemas_outros',type:'text',label:'Qual foi o outro problema?',req:1,show:function(d){return d.anest_previa==='sim'&&(d.anest_problemas||[]).indexOf('Outro problema')>=0;}},
+      {id:'familia',type:'radio',label:'Alguém da família teve problema grave com anestesia?',options:[['sim','Sim'],['nao','Não'],['nsei','Não sei']]},
+      {id:'ronco',type:'radio',label:'Você ronca?',options:[['nao','Não'],['as_vezes','Às vezes'],['alto','Alto, todas as noites']]},
+      {id:'paradas',type:'radio',label:'Já disseram que você para de respirar dormindo?',options:[['sim','Sim'],['nao','Não'],['nsei','Não sei']]},
+      {id:'dentes',type:'check',label:'Na boca, você tem algum destes?',options:opts(L.DENTES)},
+      {id:'dentes_outros',type:'text',label:'O que mais você tem na boca ou nos dentes?',req:1,show:function(d){return (d.dentes||[]).indexOf('Outro')>=0;}},
+      {id:'gravida',type:'radio',label:'Existe chance de você estar grávida?',options:[['nao','Não'],['talvez','Talvez'],['sim','Sim']]}]},
+    {id:'tcle',title:'Termo de consentimento',intro:'Leia o resumo. O texto completo está logo abaixo.',pre:'tcle',fields:[
+      {id:'transfusao',type:'radio',label:'Se houver sangramento importante durante a cirurgia, você autoriza transfusão de sangue? Ela só é feita em último caso, quando necessária para proteger sua vida ou sua saúde.',req:1,options:[['autorizo','Autorizo'],['nao_autorizo','Não autorizo'],['conversar','Quero conversar sobre isso na videoconsulta']]},
+      {id:'tcle_aceite',type:'check1',label:'Li o termo e concordo com a anestesia e com o uso dos meus dados de saúde.',req:1},
+      {id:'tcle_nome',type:'text',label:'Digite seu nome completo como assinatura',req:1}]},
+    {id:'video',title:'Videoconsulta',intro:'Uma conversa rápida de cerca de 10 minutos para tirar dúvidas e orientar você.',fields:[
+      {id:'periodo',type:'radio',label:'Melhor período para a chamada',options:[['manha','Manhã'],['tarde','Tarde'],['noite','Noite']]},
+      {id:'whatsapp',type:'text',label:'WhatsApp para a chamada',inputmode:'tel',ph:'(83) 90000-0000'},
+      {id:'duvidas',type:'area',label:'Alguma dúvida para a anestesista?'}]}
+  ];
+
+
+  var SB_URL='https://fqrbrsjauzfoxeqshubc.supabase.co', SB_KEY='sb_publishable_GJddJE_QwWj9PxsphwPaDg_hyhNG96v';
+  var MED='Dra. Layla Praça Agra';
+  var sb=null, MODE='staff', TOKEN=null, INFO=null, TCLE=null;
+  var patients=[], curId=null, appOn=false;
+  var draft={}, step=0, submitted=false, photos={}, saveTimer=null;
+  var FIELDS={}; STEPS.forEach(function(s){ s.fields.forEach(function(f){ FIELDS[f.id]=f; }); });
+  function cur(){ for(var i=0;i<patients.length;i++){ if(patients[i].id===curId)return patients[i]; } return null; }
+  function z2(n){ return ('0'+n).slice(-2); }
+  function brFrom(s){ if(!s)return ''; var d=new Date(s); if(isNaN(d))return ''; return z2(d.getDate())+'/'+z2(d.getMonth()+1)+'/'+d.getFullYear()+' '+z2(d.getHours())+':'+z2(d.getMinutes()); }
+  function firstName(n){ return String(n||'').trim().split(/\s+/)[0]||''; }
+  function waLink(num,text){ var d=String(num||'').replace(/\D/g,''); if(d.length===10||d.length===11)d='55'+d; return 'https://wa.me/'+(d.length>=12?d:'')+'?text='+encodeURIComponent(text); }
+  function baseUrl(){ return location.origin+location.pathname; }
+  function slug(s){ return String(s||'paciente').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+  function blankFicha(){ return {exames:{data:'',hb:'',ht:'',leuc:'',plaq:'',tp:'',tap:'',inr:'',ttpa:'',ureia:'',creat:'',na:'',k:'',ca:'',mg:'',tgo:'',tgp:'',glic:'',hba1c:'',ecg:'',ecg_desc:'',eco:'',eco_desc:'',img_desc:'',outros:'',risco:''},via:{mall:'',boca:'',tmd:'',mordida:'',pescoco:'',qualidade:'',outros:''},anest1:'',anest1_outra:'',anest2:'',anest2_outra:'',anest_motivo:'',asa:'',conduta:'',orient:'',decisao:'',validacao:null}; }
+  var DEC={liberada:'Liberada',ressalvas:'Liberada com ressalvas',presencial:'Reavaliar presencialmente',adiar:'Adiar ou pedir exames'};
+
+  /* ---------- Troca de telas ---------- */
+  var VIEWS=['login','pt','fx','nv','md','ac'];
+  function show(which){
+    VIEWS.forEach(function(k){ var el=$('#v-'+k); if(el)el.hidden=(k!==which); var tb=$('#tab-'+k); if(tb)tb.setAttribute('aria-pressed',k===which?'true':'false'); });
+    if(which==='fx'){ renderList(); renderDetail(); }
+    if(which==='nv'){ renderNv(); }
+    if(which==='md'){ renderMd(); }
+    if(which==='ac'){ renderAc(); }
+    window.scrollTo(0,0);
+  }
+  function newClient(persist){ return window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:persist,autoRefreshToken:persist,detectSessionInUrl:persist}}); }
+
+  /* ================= MODO PACIENTE (link com código) ================= */
+  function localKey(){ return 'apa-rasc-'+String(TOKEN).slice(0,10); }
+  function saveLocal(){ try{ localStorage.setItem(localKey(),JSON.stringify({d:draft,s:step})); }catch(e){} }
+  function setSaved(t){ var el=$('#saved'); if(el)el.textContent=t; }
+  function flush(){
+    clearTimeout(saveTimer);
+    if(MODE!=='paciente'||submitted||!INFO)return Promise.resolve();
+    return sb.rpc('paciente_salvar',{p_token:TOKEN,p_respostas:draft,p_enviar:false,p_nome_digitado:null}).then(function(r){
+      setSaved(r.error?'Não consegui salvar agora. Suas respostas continuam nesta tela.':'Salvo automaticamente');
+    },function(){ setSaved('Não consegui salvar agora. Suas respostas continuam nesta tela.'); });
+  }
+  function scheduleSave(){ saveLocal(); setSaved('Salvando…'); clearTimeout(saveTimer); saveTimer=setTimeout(flush,1500); }
+
+  function tcleSecs(txt){ var out=[],c=null; String(txt||'').split(/\r?\n/).forEach(function(l){ var m=l.match(/^##\s+(.*)$/); if(m){ c={t:m[1].trim(),l:[]}; out.push(c); return; } if(c&&l.trim()!=='')c.l.push(l.trim()); }); return out; }
+  function withName(s){ return esc(s).replace(/\{\{nome\}\}/g,'<b class="tn">'+esc(draft.tcle_nome||'(seu nome)')+'</b>'); }
+  function tcleBlock(){
+    if(!TCLE)return '';
+    var secs=tcleSecs(TCLE.texto), h='';
+    secs.forEach(function(s){ if(s.t==='Resumo'){ h+='<ul class="sum">'+s.l.map(function(x){ return '<li>'+esc(x.replace(/^-\s*/,''))+'</li>'; }).join('')+'</ul>'; } });
+    h+='<details><summary>Ler o texto completo</summary><div class="full">';
+    secs.forEach(function(s){ if(s.t==='Resumo')return; h+='<h3>'+esc(s.t)+'</h3>'+s.l.map(function(x){ return '<p>'+withName(x)+'</p>'; }).join(''); });
+    h+='<p class="muted sm">Versão do termo: '+esc(TCLE.versao)+'.</p></div></details>';
+    return h;
+  }
+  function friendly(m){ m=String(m||''); if(/Digite seu nome|Link inválido|Termo não cadastrado|Respostas inválidas/.test(m))return m; return 'Verifique sua conexão e tente de novo.'; }
+
+  function bootPatient(){
+    sb=newClient(false);
+    $('#v-pt').hidden=false;
+    $('#v-pt').innerHTML='<div class="card"><p class="muted">Carregando…</p></div>';
+    sb.rpc('paciente_abrir',{p_token:TOKEN}).then(function(r){
+      if(r.error||!r.data){ renderInvalid(); return; }
+      INFO=r.data; TCLE=INFO.tcle||null;
+      var pre={nome:INFO.nome||'',data_cirurgia:INFO.data_cirurgia||'',hospital:INFO.hospital||'',cirurgiao:INFO.cirurgiao||'',procedimento:INFO.procedimento||'',whatsapp:INFO.contato||''};
+      var resp=INFO.respostas||{}, hasResp=false;
+      draft=Object.assign({},pre);
+      Object.keys(resp).forEach(function(k){ hasResp=true; if(resp[k]!==''||!(k in pre))draft[k]=resp[k]; });
+      if(!hasResp){ try{ var raw=localStorage.getItem(localKey()); if(raw){ var o=JSON.parse(raw); if(o&&o.d){ draft=Object.assign(draft,o.d); step=o.s||0; } } }catch(e){} }
+      if(INFO.status==='validada')renderClosed(); else renderPt();
+    },function(){ $('#v-pt').innerHTML='<div class="card"><p>Não consegui abrir o formulário agora. Verifique sua conexão e recarregue a página.</p></div>'; });
+  }
+  function renderInvalid(){ $('#v-pt').innerHTML='<div class="card"><span class="eyebrow">Link indisponível</span><h1>Este link não está mais valendo</h1><p>O link pode ter vencido ou estar incompleto. Peça um novo link à clínica da '+esc(MED)+'.</p></div>'; }
+
+  function renderPt(){
+    var host=$('#v-pt'); if(submitted)return;
+    var s=STEPS[step]; var pct=Math.round((step+1)/STEPS.length*100);
+    var last=step===STEPS.length-1; var reenv=INFO&&INFO.status==='enviada';
+    var h='<div class="head"><h1>Avaliação pré-anestésica</h1><p class="muted sm">Leva cerca de 8 minutos. Suas respostas são salvas automaticamente: você pode parar e voltar depois pelo mesmo link.</p></div>';
+    if(reenv)h+='<div class="note">Você já enviou suas respostas. Pode corrigir o que quiser até a anestesista validar a avaliação.</div>';
+    h+='<div class="card"><div class="head"><span class="eyebrow">Etapa '+(step+1)+' de '+STEPS.length+'</span><div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><i style="width:'+pct+'%"></i></div><h2>'+esc(s.title)+'</h2><p class="muted">'+esc(s.intro)+'</p></div>';
+    if(s.pre==='tcle'){ h+=tcleBlock(); } else if(s.pre){ h+='<div class="note">'+esc(s.pre)+'</div>'; }
+    h+='<div class="fields" id="fields">'+s.fields.map(fieldHTML).join('')+'</div>';
+    if(s.post==='bmi')h+='<div class="note" id="bmi">'+esc(bmiNote())+'</div>';
+    h+='<div class="actions"><button type="button" class="btn" id="back"'+(step===0?' disabled':'')+'>Voltar</button><button type="button" class="btn pri" id="next">'+(last?(reenv?'Salvar correções':'Enviar avaliação'):'Continuar')+'</button></div>';
+    h+='<div class="hint" id="saved" role="status"></div></div>';
+    host.innerHTML=h;
+    $('#back').addEventListener('click',function(){ if(step>0){ step--; saveLocal(); flush(); renderPt(); window.scrollTo(0,0); } });
+    $('#next').addEventListener('click',next);
+  }
+  function applyConds(){
+    STEPS[step].fields.forEach(function(f){ if(f.show){ var el=$('[data-f="'+f.id+'"]'); if(el)el.hidden=!f.show(draft); } });
+  }
+  $('#v-pt').addEventListener('input',onField);
+  $('#v-pt').addEventListener('change',onField);
+  function onField(e){
+    var t=e.target; var n=t.name; if(!n||!FIELDS[n])return; var f=FIELDS[n];
+    if(f.type==='check'){
+      var excl=/^Nenhum/.test(t.value);
+      if(t.checked){ [].slice.call(document.querySelectorAll('input[name="'+n+'"]')).forEach(function(c){ if(c!==t&&(excl||/^Nenhum/.test(c.value)))c.checked=false; }); }
+      draft[n]=[].slice.call(document.querySelectorAll('input[name="'+n+'"]:checked')).map(function(c){ return c.value; });
+    } else if(f.type==='check1'){ draft[n]=t.checked;
+    } else { draft[n]=t.value; }
+    applyConds();
+    var bn=$('#bmi'); if(bn)bn.textContent=bmiNote();
+    if(n==='tcle_nome'){ [].slice.call(document.querySelectorAll('.tn')).forEach(function(s){ s.textContent=t.value||'(seu nome)'; }); }
+    var er=$('#e_'+n); if(er)er.textContent='';
+    scheduleSave();
+  }
+
+  function fieldHTML(f){
+    var v=draft[f.id]; var id='f_'+f.id; var h='';
+    var lab=esc(f.label)+(f.req?' <span class="req" aria-hidden="true">*</span>':'');
+    if(f.type==='radio'){
+      h+='<div class="lbl" id="l_'+f.id+'">'+lab+'</div><div class="chips" role="radiogroup" aria-labelledby="l_'+f.id+'">';
+      f.options.forEach(function(o){ h+='<label><input type="radio" name="'+f.id+'" value="'+esc(o[0])+'"'+(v===o[0]?' checked':'')+'><span>'+esc(o[1])+'</span></label>'; });
+      h+='</div>';
+    } else if(f.type==='check'){
+      h+='<div class="lbl" id="l_'+f.id+'">'+lab+'</div><div class="chips" role="group" aria-labelledby="l_'+f.id+'">';
+      f.options.forEach(function(o){ h+='<label><input type="checkbox" name="'+f.id+'" value="'+esc(o[0])+'"'+((v||[]).indexOf(o[0])>=0?' checked':'')+'><span>'+esc(o[1])+'</span></label>'; });
+      h+='</div>';
+    } else if(f.type==='check1'){
+      h+='<div class="chips"><label><input type="checkbox" id="'+id+'" name="'+f.id+'"'+(v?' checked':'')+'><span>'+lab+'</span></label></div>';
+    } else if(f.type==='area'){
+      h+='<label class="lbl" for="'+id+'">'+lab+'</label><textarea id="'+id+'" name="'+f.id+'">'+esc(v||'')+'</textarea>';
+    } else if(f.type==='file'){
+      h+='<label class="lbl" for="'+id+'">'+lab+'</label><input type="file" accept="image/*" id="'+id+'" name="'+f.id+'"><div class="thumb" id="th_'+f.id+'">'+(photos[f.id]?'<img alt="Prévia da foto" src="'+photos[f.id]+'">':'')+'</div>';
+    } else {
+      h+='<label class="lbl" for="'+id+'">'+lab+'</label><input type="'+(f.type==='date'?'date':'text')+'" id="'+id+'" name="'+f.id+'" value="'+esc(v||'')+'"'+(f.inputmode?' inputmode="'+f.inputmode+'"':'')+(f.ph?' placeholder="'+esc(f.ph)+'"':'')+(f.list?' list="dl_'+f.id+'"':'')+' autocomplete="off">';
+      if(f.list){ h+='<datalist id="dl_'+f.id+'">'+f.list.map(function(x){ return '<option value="'+esc(x)+'">'; }).join('')+'</datalist>'; }
+    }
+    if(f.hint)h+='<div class="hint">'+esc(f.hint)+'</div>';
+    h+='<div class="err" id="e_'+f.id+'" role="alert"></div>';
+    return '<div class="f" data-f="'+f.id+'"'+((f.show&&!f.show(draft))?' hidden':'')+'>'+h+'</div>';
+  }
+  function bmiNote(){ var b=L.bmi(draft); return b===null?'Preencha peso e altura para calcular o IMC.':'Seu IMC é '+L.fmt(b)+'.'; }
+
+
+  function validate(){
+    var first=null;
+    STEPS[step].fields.forEach(function(f){
+      var er=$('#e_'+f.id); if(er)er.textContent='';
+      if(f.show&&!f.show(draft))return;
+      var v=draft[f.id]; var msg='';
+      if(f.req){
+        if(f.type==='check1'){ if(!v)msg='Marque a caixa para continuar.'; }
+        else if(!v||!String(v).trim())msg='Preencha este campo.';
+      }
+      if(!msg&&(f.id==='peso'||f.id==='altura')&&v){ var n=L.parseNum(v); if(!n||n<=0)msg='Use apenas números.'; else if(f.id==='altura'&&(n<100||n>230))msg='Informe a altura em centímetros, por exemplo 165.'; else if(f.id==='peso'&&(n<30||n>300))msg='Informe o peso em quilos, por exemplo 62,5.'; }
+      if(msg){ if(er)er.textContent=msg; if(!first)first=f.id; }
+    });
+    return first;
+  }
+
+
+  function next(){
+    var bad=validate();
+    if(bad){ var el=$('[data-f="'+bad+'"]'); if(el)el.scrollIntoView({block:'center'}); return; }
+    if(step<STEPS.length-1){ step++; saveLocal(); flush(); renderPt(); window.scrollTo(0,0); return; }
+    submit();
+  }
+  function submit(){
+    var btn=$('#next'); var old=btn.textContent; btn.disabled=true; btn.textContent='Enviando…';
+    clearTimeout(saveTimer);
+    sb.rpc('paciente_salvar',{p_token:TOKEN,p_respostas:draft,p_enviar:true,p_nome_digitado:draft.tcle_nome||''}).then(function(r){
+      if(r.error){ btn.disabled=false; btn.textContent=old; setSaved('Não consegui enviar: '+friendly(r.error.message)); return; }
+      INFO.status='enviada'; submitted=true;
+      try{ localStorage.removeItem(localKey()); }catch(e){}
+      renderDone();
+    },function(){ btn.disabled=false; btn.textContent=old; setSaved('Não consegui enviar: verifique sua conexão e tente de novo.'); });
+  }
+  function renderDone(){
+    var h='<div class="card done"><span class="eyebrow">Enviado</span><h1>Recebemos sua avaliação</h1><p>Obrigada, '+esc(firstName(draft.nome))+'. A anestesista vai analisar suas respostas e os exames enviados pelo seu cirurgião.</p><h3>Próximos passos</h3><ol><li>Você receberá o horário da videoconsulta no WhatsApp informado.</li><li>Na chamada, a anestesista tira suas dúvidas, avalia a via aérea com você e passa as orientações.</li><li>As orientações de jejum e de medicamentos ficam por escrito para você consultar.</li></ol><p class="muted sm">Se lembrar de algo que esqueceu de informar, abra este mesmo link e corrija suas respostas antes da videoconsulta.</p><div class="actions"><button type="button" class="btn" id="edit">Corrigir minhas respostas</button></div></div>';
+    $('#v-pt').innerHTML=h;
+    $('#edit').addEventListener('click',function(){ submitted=false; step=0; renderPt(); });
+    window.scrollTo(0,0);
+  }
+  function renderClosed(){
+    var c=INFO.copia||{};
+    var h='<div class="card done"><span class="eyebrow">Concluída</span><h1>Sua avaliação foi concluída</h1><p>Obrigada, '+esc(firstName(draft.nome||INFO.nome))+'. A anestesista validou a sua avaliação. Baixe a sua cópia e guarde com você.</p><div class="actions"><button type="button" class="btn pri" id="dlcopy">Baixar minha cópia (PDF)</button></div><div class="hint" id="dlmsg" role="status"></div></div>';
+    $('#v-pt').innerHTML=h;
+    $('#dlcopy').addEventListener('click',function(){
+      var msg=$('#dlmsg');
+      try{
+        var p2={nome:draft.nome||INFO.nome,data_cirurgia:draft.data_cirurgia||INFO.data_cirurgia,hospital:draft.hospital||INFO.hospital,cirurgiao:draft.cirurgiao||INFO.cirurgiao,procedimento:draft.procedimento||INFO.procedimento,transfusao:draft.transfusao,tcle_aceite:true,tcle_quando:brFrom(c.tcle_aceito_em),tcle_nome:c.tcle_nome,tcle_versao:c.tcle_versao,ficha:{anest1:c.anest1,anest1_outra:c.anest1_outra,anest2:c.anest2,anest2_outra:c.anest2_outra,orient:c.orientacoes||''}};
+        L.buildPdf(p2,window.jspdf.jsPDF,'paciente').save('orientacoes-anestesia-'+slug(p2.nome)+'.pdf');
+        msg.textContent='Arquivo gerado. Procure na pasta de downloads.';
+      }catch(e){ msg.textContent='Não foi possível gerar o arquivo agora. Tente de novo.'; }
+    });
+  }
+
+  /* ================= MODO ANESTESISTA (login) ================= */
+  function dbToP(row){
+    var p=Object.assign({},row.respostas||{});
+    p.id=row.id; p.status=row.status; p.contato=row.paciente_contato||'';
+    [['nome','paciente_nome'],['data_cirurgia','data_cirurgia'],['hospital','hospital'],['cirurgiao','cirurgiao'],['procedimento','procedimento']].forEach(function(a){ if(!p[a[0]])p[a[0]]=row[a[1]]||''; });
+    if(!p.whatsapp)p.whatsapp=p.contato;
+    p.tcle_aceite=!!row.tcle_aceito_em; p.tcle_quando=brFrom(row.tcle_aceito_em); p.tcle_nome=row.tcle_nome_digitado||p.tcle_nome||''; p.tcle_versao=(row.tcle&&row.tcle.versao)||'';
+    var b=blankFicha();
+    p.ficha={exames:Object.assign(b.exames,row.exames||{}),via:Object.assign(b.via,row.via_aerea||{}),asa:row.asa||'',anest1:row.anest1||'',anest1_outra:row.anest1_outra||'',anest2:row.anest2||'',anest2_outra:row.anest2_outra||'',anest_motivo:row.anest_motivo||'',conduta:row.observacoes||'',orient:row.orientacoes||'',decisao:row.decisao||'',validacao:row.validada_em?{quando:brFrom(row.validada_em),decisao:DEC[row.decisao]||''}:null};
+    return p;
+  }
+  var SELECT='*, tcle:tcle_versoes(versao)';
+  function loadList(){
+    return sb.from('avaliacoes').select(SELECT).neq('status','cancelada').order('data_cirurgia',{ascending:true,nullsFirst:false}).then(function(r){
+      if(r.error){ $('#plist').innerHTML='<p class="msg bad">Não consegui carregar as fichas: '+esc(r.error.message)+'</p>'; return; }
+      patients=r.data.map(dbToP);
+      if(!cur())curId=patients.length?patients[0].id:null;
+      if(!$('#v-fx').hidden){ renderList(); renderDetail(); }
+    });
+  }
+  function reloadOne(id){
+    return sb.from('avaliacoes').select(SELECT).eq('id',id).maybeSingle().then(function(r){
+      if(r.error||!r.data)return null;
+      var np=dbToP(r.data), idx=-1; patients.forEach(function(q,i){ if(q.id===id)idx=i; });
+      if(idx>=0)patients[idx]=np; else patients.push(np);
+      if(curId===id){ renderDetail(); }
+      renderList();
+      return np;
+    });
+  }
+  function setLoginMsg(t,bad){ var m=$('#lg_msg'); if(m){ m.textContent=t; m.className='msg'+(bad?' bad':' ok'); } }
+  function renderLogin(){
+    $('#v-login').innerHTML='<div class="head"><h1>Entrar</h1><p class="muted sm">Acesso restrito à anestesista.</p></div><div class="card login"><div class="f"><label class="lbl" for="lg_email">E-mail</label><input type="email" id="lg_email" autocomplete="username" inputmode="email"></div><div class="f"><label class="lbl" for="lg_pass">Senha</label><input type="password" id="lg_pass" autocomplete="current-password"></div><div class="actions"><button type="button" class="btn pri" id="lg_go">Entrar</button></div><div class="msg" id="lg_msg" role="status"></div><div><button type="button" class="link" id="lg_link">Receber um link de acesso por e-mail</button></div></div>';
+  }
+  $('#v-login').addEventListener('click',function(e){
+    var em=($('#lg_email')||{}).value||'';
+    if(e.target.id==='lg_go'){
+      var pw=$('#lg_pass').value; if(!em||!pw){ setLoginMsg('Preencha e-mail e senha.',true); return; }
+      setLoginMsg('Entrando…',false);
+      sb.auth.signInWithPassword({email:em.trim(),password:pw}).then(function(r){ if(r.error)setLoginMsg('E-mail ou senha incorretos.',true); });
+    }
+    if(e.target.id==='lg_link'){
+      if(!em){ setLoginMsg('Digite o seu e-mail acima.',true); return; }
+      setLoginMsg('Enviando…',false);
+      sb.auth.signInWithOtp({email:em.trim(),options:{shouldCreateUser:false,emailRedirectTo:baseUrl()}}).then(function(){ setLoginMsg('Se este e-mail tiver acesso, o link chega em alguns minutos.',false); });
+    }
+  });
+  $('#v-login').addEventListener('keydown',function(e){ if(e.key==='Enter'&&e.target.id==='lg_pass'){ $('#lg_go').click(); } });
+  function enter(){
+    if(appOn)return; appOn=true;
+    sb.rpc('is_medica').then(function(r){
+      if(r.data===true){ $('#seg').hidden=false; $('#logout').hidden=false; show('fx'); loadList(); loadTpl(); }
+      else { appOn=false; sb.auth.signOut().then(function(){ renderLogin(); show('login'); setLoginMsg('Esta conta não tem acesso.',true); }); }
+    });
+  }
+  function leave(){ appOn=false; patients=[]; curId=null; $('#seg').hidden=true; $('#logout').hidden=true; renderLogin(); show('login'); }
+  function startStaff(){
+    sb=newClient(true);
+    renderLogin();
+    sb.auth.onAuthStateChange(function(ev,sess){ setTimeout(function(){ if(sess&&!appOn)enter(); else if(!sess&&appOn)leave(); },0); });
+    sb.auth.getSession().then(function(r){ if(r.data&&r.data.session)enter(); else show('login'); });
+  }
+
+  /* ---------- Novo convite ---------- */
+  var lastInvite=null;
+  function renderNv(){
+    var h='<div class="head"><h1>Novo convite</h1><p class="muted sm">Cria o link pessoal da paciente. Os dados da cirurgia já vão preenchidos no formulário dela.</p></div><div class="card"><div class="fields">'
+      +'<div class="f"><label class="lbl" for="nv_nome">Nome da paciente <span class="req">*</span></label><input type="text" id="nv_nome" autocomplete="off"></div>'
+      +'<div class="f"><label class="lbl" for="nv_zap">WhatsApp da paciente</label><input type="tel" id="nv_zap" inputmode="tel" placeholder="(83) 90000-0000" autocomplete="off"></div>'
+      +'<div class="f"><label class="lbl" for="nv_data">Data da cirurgia</label><input type="date" id="nv_data"></div>'
+      +'<div class="f"><label class="lbl" for="nv_hosp">Hospital ou clínica</label><input type="text" id="nv_hosp" autocomplete="off"></div>'
+      +'<div class="f"><label class="lbl" for="nv_cir">Cirurgião</label><input type="text" id="nv_cir" autocomplete="off"></div>'
+      +'<div class="f"><label class="lbl" for="nv_proc">Cirurgia</label><input type="text" id="nv_proc" autocomplete="off" placeholder="Ex.: abdominoplastia"></div>'
+      +'<div class="f"><label class="lbl" for="nv_dias">Validade do link</label><select id="nv_dias"><option value="7">7 dias</option><option value="14" selected>14 dias</option><option value="30">30 dias</option></select></div>'
+      +'</div><div class="actions"><button type="button" class="btn pri" id="nv_go">Criar convite</button></div><div class="msg" id="nv_msg" role="status"></div></div><div id="nv_res"></div>';
+    $('#v-nv').innerHTML=h;
+    if(lastInvite)showInviteResult(lastInvite);
+  }
+  function showInviteResult(inv){
+    var url=baseUrl()+'#/p/'+inv.token;
+    var msg='Olá, '+firstName(inv.nome)+'! Sou a '+MED+', anestesiologista. Para a sua avaliação pré-anestésica, preencha este formulário (leva cerca de 8 minutos): '+url;
+    $('#nv_res').innerHTML='<div class="card"><h3>Link criado para '+esc(inv.nome)+'</h3><div class="linkbox"><code>'+esc(url)+'</code><div class="row2"><button type="button" class="btn sm" data-copy="'+esc(url)+'">Copiar link</button><a class="btn sm" target="_blank" rel="noopener" href="'+esc(waLink(inv.zap,msg))+'">Abrir no WhatsApp</a></div><span class="hint">Este link só aparece agora. Se perder, abra a ficha da paciente e gere um novo.</span></div></div>';
+  }
+  $('#v-nv').addEventListener('click',function(e){
+    if(e.target.id!=='nv_go')return;
+    var nome=$('#nv_nome').value.trim(), m=$('#nv_msg');
+    if(!nome){ m.textContent='Digite o nome da paciente.'; m.className='msg bad'; return; }
+    e.target.disabled=true; m.textContent='Criando…'; m.className='msg';
+    var zap=$('#nv_zap').value.trim();
+    sb.rpc('criar_convite',{p_nome:nome,p_contato:zap||null,p_data_cirurgia:$('#nv_data').value||null,p_hospital:$('#nv_hosp').value.trim()||null,p_cirurgiao:$('#nv_cir').value.trim()||null,p_procedimento:$('#nv_proc').value.trim()||null,p_dias_validade:parseInt($('#nv_dias').value,10)||14}).then(function(r){
+      e.target.disabled=false;
+      if(r.error){ m.textContent='Não consegui criar: '+r.error.message; m.className='msg bad'; return; }
+      lastInvite={token:r.data.token,nome:nome,zap:zap};
+      m.textContent='Convite criado.'; m.className='msg ok';
+      showInviteResult(lastInvite);
+      loadList().then(function(){ curId=r.data.id; });
+    });
+  });
+
+  /* ---------- Conta ---------- */
+  function renderAc(){
+    $('#v-ac').innerHTML='<div class="head"><h1>Conta</h1><p class="muted sm">Troque a sua senha de acesso.</p></div><div class="card"><div class="f"><label class="lbl" for="ac_p1">Nova senha</label><input type="password" id="ac_p1" autocomplete="new-password"><span class="hint">Mínimo de 10 caracteres.</span></div><div class="f"><label class="lbl" for="ac_p2">Repita a nova senha</label><input type="password" id="ac_p2" autocomplete="new-password"></div><div class="actions"><button type="button" class="btn pri" id="ac_go">Salvar nova senha</button></div><div class="msg" id="ac_msg" role="status"></div></div>';
+  }
+  $('#v-ac').addEventListener('click',function(e){
+    if(e.target.id!=='ac_go')return;
+    var a=$('#ac_p1').value, b=$('#ac_p2').value, m=$('#ac_msg');
+    if(a.length<10){ m.textContent='Use pelo menos 10 caracteres.'; m.className='msg bad'; return; }
+    if(a!==b){ m.textContent='As duas senhas precisam ser iguais.'; m.className='msg bad'; return; }
+    sb.auth.updateUser({password:a}).then(function(r){ if(r.error){ m.textContent='Não consegui trocar: '+r.error.message; m.className='msg bad'; } else { m.textContent='Senha trocada.'; m.className='msg ok'; $('#ac_p1').value=''; $('#ac_p2').value=''; } });
+  });
+
+  /* ---------- Lista e salvamento da ficha ---------- */
+  function renderList(){
+    var c={verde:0,amarelo:0,vermelho:0};
+    var items=patients.map(function(p){
+      var done=(p.status==='enviada'||p.status==='validada');
+      var t=L.triage(p); if(done)c[t.level]++;
+      var pend=done?L.pendencias(p).length:0;
+      var dias=p.data_cirurgia?L.daysBetween(iso(0),p.data_cirurgia):null;
+      var stl={convite:'Aguardando a paciente',rascunho:'Paciente preenchendo',enviada:'Enviada',validada:'Validada'}[p.status]||p.status;
+      return '<button type="button" class="item" data-id="'+p.id+'" aria-current="'+(p.id===curId?'true':'false')+'"><div class="r1"><b>'+esc(p.nome||'(sem nome)')+'</b>'+(done?pill(t.level):'<span class="tag wait">'+esc(stl)+'</span>')+'</div><span class="sm muted">'+esc(p.procedimento||'Cirurgia a informar')+'</span><span class="sm muted">'+brDate(p.data_cirurgia)+(dias!==null?' · '+(dias<0?'há '+(-dias)+' dias':'em '+dias+' dias'):'')+' · '+esc(p.hospital||'Local a informar')+'</span><span class="sm">'+(done?((pend?pend+' pendência'+(pend>1?'s':''):'Sem pendências')+(p.status==='validada'?' · validada':'')):'')+'</span></button>';
+    }).join('');
+    $('#plist').innerHTML='<div class="row2"><h3>Pacientes</h3><button type="button" class="btn sm" id="reload">Atualizar</button></div><div class="counts">'+pill('vermelho').replace('Vermelho',c.vermelho+' vermelho')+pill('amarelo').replace('Amarelo',c.amarelo+' amarelo')+pill('verde').replace('Verde',c.verde+' verde')+'</div>'+(items||'<p class="muted sm">Nenhuma paciente ainda. Crie um convite na aba “Novo convite”.</p>');
+  }
+  var saveT=null;
+  function setStat(t){ var el=$('#savestat'); if(el)el.textContent=t; }
+  function queueSave(p){ p._dirty=true; setStat('Salvando…'); clearTimeout(saveT); saveT=setTimeout(function(){ saveFicha(p); },900); }
+  function saveFicha(p){
+    clearTimeout(saveT);
+    var f=p.ficha, t=L.triage(p);
+    var patch={exames:f.exames,via_aerea:f.via,asa:f.asa||null,risco_cirurgico:f.exames.risco||null,nivel_triagem:t.level,observacoes:f.conduta||null,anest1:f.anest1||null,anest1_outra:f.anest1_outra||null,anest2:f.anest2||null,anest2_outra:f.anest2_outra||null,anest_motivo:f.anest_motivo||null,orientacoes:f.orient||null,decisao:f.decisao||null};
+    return sb.from('avaliacoes').update(patch).eq('id',p.id).then(function(r){
+      if(r.error){ setStat('Erro ao salvar: '+r.error.message); return false; }
+      p._dirty=false; setStat('Salvo'); return true;
+    });
+  }
+  function flushFicha(p){ return p._dirty?saveFicha(p):Promise.resolve(true); }
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState!=='hidden')return;
+    if(MODE==='paciente')flush(); else { var p=cur(); if(p&&p._dirty)saveFicha(p); }
+  });
+  window.addEventListener('hashchange',function(){ location.reload(); });
+
+  function statusCard(p){
+    var stl={convite:'Aguardando a paciente preencher o formulário',rascunho:'A paciente está preenchendo (rascunho salvo)',enviada:'Formulário enviado pela paciente',validada:'Avaliação validada'}[p.status]||'';
+    return '<div class="card"><div class="dhead"><div class="head"><h3>Situação</h3><span>'+esc(stl)+'</span></div><span class="hint" id="savestat" role="status"></span></div><div class="row2"><button type="button" class="btn sm" id="newlink">Gerar novo link para a paciente</button><span class="hint">O link anterior deixa de valer. Depois de validar, use o novo link para a paciente baixar a cópia dela.</span></div><div id="linkbox"></div><div id="docs"></div></div>';
+  }
+  function showLink(p,token){
+    var url=baseUrl()+'#/p/'+token, done=p.status==='validada';
+    var msg=done?('Olá, '+firstName(p.nome)+'! Sua avaliação pré-anestésica foi concluída. Acesse sua cópia e baixe o PDF: '+url):('Olá, '+firstName(p.nome)+'! Sou a '+MED+', anestesiologista. Para a sua avaliação pré-anestésica, preencha este formulário (leva cerca de 8 minutos): '+url);
+    $('#linkbox').innerHTML='<div class="linkbox"><b>Link da paciente</b><code>'+esc(url)+'</code><div class="row2"><button type="button" class="btn sm" data-copy="'+esc(url)+'">Copiar link</button><a class="btn sm" target="_blank" rel="noopener" href="'+esc(waLink(p.whatsapp||p.contato,msg))+'">Abrir no WhatsApp</a></div><span class="hint">Este link só aparece agora. Vale por '+(done?'60':'14')+' dias.</span></div>';
+  }
+  function loadDocs(p){
+    sb.from('documentos').select('id,tipo,caminho,criado_em').eq('avaliacao_id',p.id).order('criado_em',{ascending:false}).then(function(r){
+      var el=$('#docs'); if(!el||cur()!==p)return;
+      if(r.error||!r.data||!r.data.length){ el.innerHTML=''; return; }
+      el.innerHTML='<h3>PDFs guardados na validação</h3><div class="row2">'+r.data.map(function(d){ return '<button type="button" class="btn sm" data-doc="'+esc(d.caminho)+'">'+({ficha_interna:'Ficha interna',orientacoes:'Orientações'}[d.tipo]||esc(d.tipo))+' · '+esc(brFrom(d.criado_em))+'</button>'; }).join('')+'</div>';
+    });
+  }
+  function lockDetail(){
+    [].slice.call($('#detail').querySelectorAll('[data-k]')).forEach(function(el){ el.disabled=true; });
+    var g=$('#gen'); if(g)g.disabled=true;
+  }
+  function snapshotPdfs(p){
+    var C=window.jspdf.jsPDF;
+    return Promise.all([['ficha_interna','interno'],['orientacoes','paciente']].map(function(pr){
+      var blob=L.buildPdf(p,C,pr[1]).output('blob'), path=p.id+'/'+pr[0]+'-'+Date.now()+'.pdf';
+      return blob.arrayBuffer().then(function(buf){ return crypto.subtle.digest('SHA-256',buf); }).then(function(h){
+        var hex=[].map.call(new Uint8Array(h),function(b){ return ('0'+b.toString(16)).slice(-2); }).join('');
+        return sb.storage.from('fichas-pdf').upload(path,blob,{contentType:'application/pdf'}).then(function(u){
+          if(u.error)throw u.error;
+          return sb.from('documentos').insert({avaliacao_id:p.id,tipo:pr[0],caminho:path,sha256:hex});
+        }).then(function(i){ if(i.error)throw i.error; });
+      });
+    }));
+  }
+
+  var NIVEL={verde:'Verde',amarelo:'Amarelo',vermelho:'Vermelho'};
+  var ACAO={verde:'Validar em 1 a 2 minutos.',amarelo:'Fazer a videoconsulta e olhar os alertas.',vermelho:'Avaliação presencial ou exames antes de liberar.'};
+  function pill(l){ return '<span class="sem '+l+'">'+NIVEL[l]+'</span>'; }
+
+  $('#plist').addEventListener('click',function(e){ var b=e.target.closest('.item'); if(!b)return; curId=b.getAttribute('data-id'); renderList(); renderDetail(); });
+
+  function sel(k,list,val,label){
+    return '<select data-k="'+k+'" aria-label="'+esc(label)+'">'+list.map(function(o){ return '<option value="'+esc(o[0])+'"'+(val===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join('')+'</select>';
+  }
+  function inp(k,label,unit,val){
+    return '<div class="f"><label class="lbl" for="x_'+k+'">'+esc(label)+'</label><input type="text" id="x_'+k+'" data-k="'+k+'" value="'+esc(val)+'" inputmode="decimal" autocomplete="off"><span class="hint">'+esc(unit)+'</span></div>';
+  }
+  function get(o,k){ var a=k.split('.'); for(var i=0;i<a.length;i++){ o=o?o[a[i]]:undefined; } return o; }
+  function setp(o,k,v){ var a=k.split('.'); for(var i=0;i<a.length-1;i++){ o=o[a[i]]; } o[a[a.length-1]]=v; }
+  var SEMPTY=[['','Selecione']];
+  function list(arr){ return (arr&&arr.length)?arr.join(', '):'—'; }
+  function listO(arr,txt){ if(!arr||!arr.length)return '—'; return arr.map(function(x){ return /^Outr/.test(x)?(x+(txt?': '+txt:'')):x; }).join(', '); }
+  function labsHTML(ex){
+    return L.LABGROUPS.map(function(g){
+      return '<div class="grp">'+esc(g[0])+'</div>'+g[1].map(function(c){ return inp('exames.'+c[0],c[1],c[2],ex[c[0]]); }).join('');
+    }).join('');
+  }
+  function cardioHTML(ex){
+    var ST=SEMPTY.concat([['normal','Normal'],['alterado','Alterado'],['nao','Não realizado']]);
+    function txt(k,label,ph){ return '<div class="f wide"><label class="lbl" for="x_exames.'+k+'">'+esc(label)+'</label><input type="text" id="x_exames.'+k+'" data-k="exames.'+k+'" value="'+esc(ex[k]||'')+'" placeholder="'+esc(ph)+'" autocomplete="off"></div>'; }
+    return '<div class="grp">Coração e imagem</div>'
+      +'<div class="f"><span class="lbl">ECG</span>'+sel('exames.ecg',ST,ex.ecg,'ECG')+'</div>'
+      +txt('ecg_desc','Resultado do ECG','Ex.: ritmo sinusal, FC 72, sem alterações')
+      +'<div class="f"><span class="lbl">Ecocardiograma</span>'+sel('exames.eco',ST,ex.eco,'Ecocardiograma')+'</div>'
+      +txt('eco_desc','Resultado do ecocardiograma','Ex.: FE 62%, sem valvopatias')
+      +txt('img_desc','Exame de imagem (qual e resultado)','Ex.: ultrassom de abdome total sem alterações');
+  }
+  function yn(v){ return v==='sim'?'Sim':(v==='nao'?'Não':(v==='nsei'?'Não sei':'—')); }
+
+  function renderDetail(){
+    var p=cur(); var host=$('#detail'); if(!p){ host.innerHTML=''; return; }
+    var f=p.ficha, ex=f.exames, v=f.via; var b=L.bmi(p), a=L.ageOf(p); var ff0=L.fieldFlags(p);
+    var h='';
+    h+=statusCard(p);
+    h+='<div class="card"><div class="dhead"><div class="head"><h2>'+esc(p.nome)+'</h2><span class="muted sm">'+(a!==null?'<span class="flagtxt '+(ff0.idade?'flag '+ff0.idade:'')+'">'+a+' anos</span>':'')+(b!==null?' · '+p.peso+' kg · '+p.altura+' cm · <span class="flagtxt '+(ff0.imc?'flag '+ff0.imc:'')+'">IMC '+L.fmt(b)+'</span>':'')+'</span></div><div id="tri-head"></div></div>';
+    h+='<div class="kv"><div><b>Data da cirurgia</b>'+brDate(p.data_cirurgia)+'</div><div><b>Hospital</b>'+esc(p.hospital||'—')+'</div><div><b>Cirurgião</b>'+esc(p.cirurgiao||'—')+'</div><div><b>Cirurgia</b>'+esc(p.procedimento||'—')+'</div></div></div>';
+    h+='<div class="card"><h3>Alertas e pendências</h3><ul class="alerts" id="tri-list"></ul><details><summary>Regras do semáforo (sugestão inicial)</summary><div class="rules"><p><b>Vermelho:</b> IMC 40 ou mais, problema no coração, trombose, anticoagulante, dificuldade prévia com tubo, suspeita de hipertermia maligna, possível gravidez, apneia com IMC alto, hemoglobina abaixo de 10, plaquetas abaixo de 100 mil, INR acima de 1,4, HbA1c de 8 ou mais, qualquer alerta de via aérea na vídeo.</p><p><b>Amarelo:</b> IMC 30 a 39,9, idade a partir de 60, pressão alta, diabetes, asma, tireoide, refluxo, anemia, caneta emagrecedora, hormônio, alergia, fumo, álcool diário, suplementos, enjoo ou reação em anestesia anterior, ronco alto, dentes ou aparelho, exame com mais de 90 dias, via aérea inconclusiva, plaquetas de 100 a 150 mil e exames fora da faixa (leucócitos, TTPa, ureia, creatinina, sódio, potássio, cálcio, magnésio, TGO/TGP, glicemia e HbA1c a partir de 6,5). As faixas variam entre laboratórios e podem ser ajustadas.</p><p class="muted">O semáforo só organiza a fila. A decisão é sempre sua.</p></div></details></div>';
+    h+='<div class="card"><h3>Respostas da paciente</h3><div class="kv">'
+      +'<div><b>Problemas de saúde</b>'+esc(listO(p.doencas,p.doencas_outras))+'</div>'
+      +'<div><b>Remédios</b>'+esc(p.medicacoes||'—')+'</div>'
+      +'<div><b>Caneta emagrecedora</b>'+yn(p.emagrecedor)+(p.emagrecedor_qual?' · '+esc(p.emagrecedor_qual):'')+'</div>'
+      +'<div><b>Hormônio</b>'+yn(p.hormonio)+(p.hormonio_qual?' · '+esc(p.hormonio_qual):'')+'</div>'
+      +'<div><b>Anticoagulante ou AAS</b>'+yn(p.anticoag)+'</div>'
+      +'<div><b>Suplementos</b>'+esc(p.suplementos||'—')+'</div>'
+      +'<div><b>Alergia</b>'+yn(p.alergia)+(p.alergia_qual?' · '+esc(p.alergia_qual):'')+'</div>'
+      +'<div><b>Fumo / álcool</b>'+esc({nunca:'Nunca fumou',ex:'Ex-fumante',atual:'Fuma'}[p.tabaco]||'—')+' · '+esc({nenhum:'Não bebe',social:'Social',diario:'Diário'}[p.alcool]||'—')+'</div>'
+      +'<div><b>Anestesia anterior</b>'+yn(p.anest_previa)+(p.anest_problemas?' · '+esc(listO(p.anest_problemas,p.anest_problemas_outros)):'')+'</div>'
+      +'<div><b>Problema na família</b>'+yn(p.familia)+'</div>'
+      +'<div><b>Ronco / pausas no sono</b>'+esc({nao:'Não ronca',as_vezes:'Ronca às vezes',alto:'Ronco alto'}[p.ronco]||'—')+' · '+yn(p.paradas)+'</div>'
+      +'<div><b>Boca e dentes</b>'+esc(listO(p.dentes,p.dentes_outros))+'</div>'
+      +'<div><b>Chance de gravidez</b>'+esc({nao:'Não',talvez:'Talvez',sim:'Sim'}[p.gravida]||'—')+'</div>'
+      +'<div><b>Transfusão de sangue</b>'+esc({autorizo:'Autoriza',nao_autorizo:'NÃO autoriza',conversar:'Quer conversar na videoconsulta'}[p.transfusao]||'—')+'</div>'
+      +'<div><b>Outras informações</b>'+esc(p.outras_info||'—')+'</div>'
+      +'<div><b>Dúvidas</b>'+esc(p.duvidas||'—')+'</div>'
+      +'<div><b>Termo (TCLE)</b>'+(p.tcle_aceite?'Aceito em '+esc(p.tcle_quando)+' por '+esc(p.tcle_nome)+' · '+esc(p.tcle_versao):'Ainda não aceito')+'</div>'
+      +'<div><b>Videoconsulta</b>'+esc({manha:'Manhã',tarde:'Tarde',noite:'Noite'}[p.periodo]||'—')+' · '+esc(p.whatsapp||'sem WhatsApp')+'</div>'
+      +'</div></div>';
+    h+='<div class="card"><h3>Resultados de exames</h3><div class="ex">'
+      +'<div class="f"><label class="lbl" for="x_exames.data">Data dos exames</label><input type="date" id="x_exames.data" data-k="exames.data" value="'+esc(ex.data)+'"></div>'
+      +labsHTML(ex)
+      +cardioHTML(ex)
+      +'<div class="f w2"><span class="lbl">Risco cirúrgico</span>'+sel('exames.risco',SEMPTY.concat([['liberado','Liberado'],['ressalvas','Liberado com ressalvas'],['nao','Não liberado'],['pendente','Pendente']]),ex.risco,'Risco cirúrgico')+'</div>'
+      +'</div><div class="f"><label class="lbl" for="x_exames.outros">Outros exames e resultados relevantes</label><textarea id="x_exames.outros" data-k="exames.outros" placeholder="Ex.: TSH, beta-HCG, ecocardiograma, hemoglobina glicada">'+esc(ex.outros||'')+'</textarea></div></div>';
+    h+='<div class="card"><h3>Videoconsulta e via aérea</h3><p class="muted sm">Mostre o gesto na tela e peça para a paciente repetir. Triagem remota: a reavaliação no dia continua necessária.</p><div class="air">'
+      +'<div class="row"><div><b>Mallampati</b><div class="say">“Abra bem a boca e ponha a língua para fora, sem fazer som.”</div></div>'+sel('via.mall',SEMPTY.concat([['I','Classe I'],['II','Classe II'],['III','Classe III'],['IV','Classe IV']]),v.mall,'Mallampati')+'</div>'
+      +'<div class="row"><div><b>Abertura da boca</b><div class="say">“Coloque três dedos juntos de lado dentro da boca. Cabem?”</div></div>'+sel('via.boca',SEMPTY.concat([['mais3','3 dedos ou mais'],['menos3','Menos de 3 dedos']]),v.boca,'Abertura da boca')+'</div>'
+      +'<div class="row"><div><b>Distância queixo-pescoço</b><div class="say">“Ponha três dedos deitados sob o queixo. Passa do gogó?”</div></div>'+sel('via.tmd',SEMPTY.concat([['mais3','3 dedos ou mais'],['menos3','Menos de 3 dedos']]),v.tmd,'Distância queixo-pescoço')+'</div>'
+      +'<div class="row"><div><b>Mordida do lábio</b><div class="say">“Empurre o queixo e cubra o lábio de cima com os dentes de baixo.”</div></div>'+sel('via.mordida',SEMPTY.concat([['sim','Consegue'],['nao','Não consegue']]),v.mordida,'Mordida do lábio')+'</div>'
+      +'<div class="row"><div><b>Mobilidade do pescoço</b><div class="say">“Olhe para o teto. Agora encoste o queixo no peito.”</div></div>'+sel('via.pescoco',SEMPTY.concat([['normal','Normal'],['limitado','Limitada']]),v.pescoco,'Mobilidade do pescoço')+'</div>'
+      +'<div class="row"><div><b>Qualidade da avaliação</b><div class="say">Imagem ruim ou gesto incompleto vira “inconclusiva”.</div></div>'+sel('via.qualidade',SEMPTY.concat([['adequada','Adequada'],['inconclusiva','Inconclusiva']]),v.qualidade,'Qualidade da avaliação')+'</div>'
+      +'</div><div class="f"><label class="lbl" for="x_via.outros">Outros achados</label><textarea id="x_via.outros" data-k="via.outros" placeholder="Ex.: pescoço curto, retrognatia, barba densa, dentes proeminentes">'+esc(v.outros||'')+'</textarea></div></div>';
+    h+='<div class="card"><h3>Conduta e orientações</h3>'
+      +'<div class="f"><span class="lbl">Classificação ASA</span>'+sel('asa',SEMPTY.concat([['I','ASA I'],['II','ASA II'],['III','ASA III'],['IV','ASA IV']]),f.asa,'Classificação ASA')+'</div>'
+      +'<div class="f"><span class="lbl">Anestesia planejada (1ª opção)</span>'+sel('anest1',SEMPTY.concat(L.ANEST.map(function(a){ return [a[0],a[1]]; })),f.anest1,'Anestesia planejada')+'</div>'
+      +'<div class="f" id="w_anest1_outra"'+(f.anest1==='outra'?'':' hidden')+'><label class="lbl" for="x_anest1_outra">Qual outra anestesia?</label><input type="text" id="x_anest1_outra" data-k="anest1_outra" value="'+esc(f.anest1_outra||'')+'" autocomplete="off"></div>'
+      +'<div class="f"><span class="lbl">Alternativa (2ª opção)</span>'+sel('anest2',SEMPTY.concat(L.ANEST.map(function(a){ return [a[0],a[1]]; })).concat([['nenhuma','Sem alternativa prevista']]),f.anest2,'Alternativa')+'</div>'
+      +'<div class="f" id="w_anest2_outra"'+(f.anest2==='outra'?'':' hidden')+'><label class="lbl" for="x_anest2_outra">Qual outra anestesia?</label><input type="text" id="x_anest2_outra" data-k="anest2_outra" value="'+esc(f.anest2_outra||'')+'" autocomplete="off"></div>'
+      +'<div class="f"><label class="lbl" for="x_anest_motivo">Quando a alternativa será usada</label><textarea id="x_anest_motivo" data-k="anest_motivo" placeholder="Ex.: se o bloqueio não puder ser feito ou não for suficiente">'+esc(f.anest_motivo||'')+'</textarea></div>'
+      +'<div class="f"><label class="lbl" for="x_conduta">Observações e conduta</label><textarea id="x_conduta" data-k="conduta" placeholder="Técnica planejada, cuidados, pendências com o cirurgião">'+esc(f.conduta)+'</textarea></div>'
+      +'<div class="f"><label class="lbl" for="x_orient">Orientações para a paciente</label><textarea id="x_orient" data-k="orient" style="min-height:380px">'+esc(f.orient)+'</textarea><div class="actions"><button type="button" class="btn sm" id="gen">Gerar texto-base</button><button type="button" class="btn sm" id="editmodel">Editar texto-base</button><button type="button" class="btn sm" id="copy">Copiar para enviar</button></div><span class="hint" id="copied"></span></div>'
+      +'<div class="f"><span class="lbl">Decisão</span>'+sel('decisao',SEMPTY.concat([['liberada','Liberada'],['ressalvas','Liberada com ressalvas'],['presencial','Reavaliar presencialmente'],['adiar','Adiar ou pedir exames']]),f.decisao,'Decisão')+'</div>'
+      +'<div id="val-box"></div></div>';
+    host.innerHTML=h;
+    refresh();
+    if(p.ficha.validacao)lockDetail();
+    loadDocs(p);
+  }
+
+  function applyFlags(p){
+    var ff=L.fieldFlags(p), host=$('#detail');
+    [].slice.call(host.querySelectorAll('[data-k]')).forEach(function(el){
+      var w=el.closest('.f,.row'); if(!w)return;
+      w.classList.remove('flag','amarelo','vermelho');
+      var l=ff[el.getAttribute('data-k')]; if(l)w.classList.add('flag',l);
+    });
+    [].slice.call(host.querySelectorAll('.kv > div')).forEach(function(c){
+      var b=c.querySelector('b'); if(!b)return;
+      var k=L.KEYMAP[b.textContent];
+      c.classList.remove('flag','amarelo','vermelho');
+      if(k&&ff[k])c.classList.add('flag',ff[k]);
+    });
+  }
+
+
+  function refresh(){
+    var p=cur(); if(!p)return;
+    applyFlags(p);
+    var t=L.triage(p), pend=L.pendencias(p), waiting=(p.status==='convite'||p.status==='rascunho');
+    $('#tri-head').innerHTML=waiting?'<span class="tag wait">Aguardando a paciente</span>':pill(t.level)+'<div class="sm muted" style="margin-block-start:4px">'+esc(ACAO[t.level])+'</div>';
+    var li=t.reasons.map(function(r){ return '<li class="'+r.l+'">'+esc(r.t)+'</li>'; }).join('')+pend.map(function(x){ return '<li class="pend">'+esc(x)+'</li>'; }).join('');
+    $('#tri-list').innerHTML=li||'<li>Nenhum alerta nas respostas.</li>';
+    var f=p.ficha; var d=f.decisao;
+    var w1=$('#w_anest1_outra'); if(w1)w1.hidden=f.anest1!=='outra';
+    var w2=$('#w_anest2_outra'); if(w2)w2.hidden=f.anest2!=='outra';
+    var warn=''; if((d==='liberada'||d==='ressalvas')&&(t.level==='vermelho'||pend.length))warn='<div class="note warn">Atenção: esta paciente está '+NIVEL[t.level].toLowerCase()+(pend.length?' e tem '+pend.length+' pendência'+(pend.length>1?'s':''):'')+'. Confirme que a liberação está correta.</div>';
+    var needTcle=!p.tcle_aceite;
+    var needAn=!f.anest1;
+    var ok=!!d&&!needTcle&&!needAn;
+    var html=f.validacao?'':warn;
+    if(!f.validacao&&needTcle)html+='<div class="note warn">Para validar, a paciente precisa ter enviado o formulário e aceitado o termo.</div>';
+    if(!f.validacao&&needAn)html+='<div class="note warn">Para validar, defina o tipo de anestesia planejada.</div>';
+    if(f.validacao){ html+='<div class="val"><span class="stamp">Validada em '+esc(f.validacao.quando)+' · '+esc(f.validacao.decisao)+'</span><button type="button" class="link" id="reopen">Reabrir para editar</button></div><span class="hint">A ficha validada fica travada. Reabra para alterar; cada mudança fica registrada.</span>'; }
+    else { html+='<div class="val"><button type="button" class="btn pri" id="validate"'+(ok?'':' disabled')+'>Validar avaliação</button><span class="hint">Registra data, hora e decisão e guarda os PDFs. A validação é sempre manual.</span></div>'; }
+    html+='<div class="val"><button type="button" class="btn" id="pdf">Baixar ficha completa (uso interno)</button><button type="button" class="btn" id="pdfp">Baixar orientações para a paciente</button><span class="hint">A ficha completa tem a triagem e as suas observações e não deve ser enviada. O PDF da paciente não tem. <span id="pdfmsg" role="status"></span></span></div>';
+    $('#val-box').innerHTML=html;
+    var vb=$('#validate'); if(vb)vb.addEventListener('click',function(){
+      vb.disabled=true; setStat('Validando…');
+      flushFicha(p).then(function(){ return sb.rpc('validar_avaliacao',{p_id:p.id}); }).then(function(r){
+        if(r.error){ setStat(''); vb.disabled=false; $('#val-box').insertAdjacentHTML('afterbegin','<div class="note warn">'+esc(r.error.message)+'</div>'); return; }
+        return reloadOne(p.id).then(function(np){
+          if(!np)return;
+          return snapshotPdfs(np).then(function(){ setStat('Validada e PDFs guardados'); loadDocs(np); },function(){ setStat('Validada, mas os PDFs não foram guardados. Baixe e guarde por conta própria.'); });
+        });
+      });
+    });
+    var rb=$('#reopen'); if(rb)rb.addEventListener('click',function(){
+      rb.disabled=true;
+      sb.rpc('reabrir_avaliacao',{p_id:p.id}).then(function(r){ if(r.error){ rb.disabled=false; setStat('Erro: '+r.error.message); return; } reloadOne(p.id); });
+    });
+    [['pdf','interno'],['pdfp','paciente']].forEach(function(pair){
+      var pb=$('#'+pair[0]); if(!pb)return;
+      pb.addEventListener('click',function(){
+        var msg=$('#pdfmsg');
+        try{
+          var C=window.jspdf&&window.jspdf.jsPDF;
+          if(!C){ msg.textContent='A biblioteca de PDF não carregou. Recarregue a página.'; return; }
+          L.buildPdf(p,C,pair[1]).save((pair[1]==='paciente'?'orientacoes-anestesia-':'ficha-pre-anestesica-')+slug(p.nome)+'-'+(p.data_cirurgia||'sem-data')+'.pdf');
+          msg.textContent='PDF gerado. Procure na pasta de downloads.';
+        }catch(e){ msg.textContent='Não foi possível gerar o PDF.'; }
+      });
+    });
+    renderList();
+  }
+  $('#detail').addEventListener('input',onFicha);
+  $('#detail').addEventListener('change',onFicha);
+  function onFicha(e){
+    var t=e.target; var k=t.getAttribute&&t.getAttribute('data-k'); if(!k)return;
+    var p=cur(); if(!p||p.ficha.validacao)return;
+    setp(p.ficha,k,t.value); refresh(); queueSave(p);
+  }
+  document.addEventListener('click',function(e){
+    var el=e.target.closest&&e.target.closest('[data-copy],[data-doc],#newlink,#reload'); if(!el)return;
+    if(el.id==='reload'){ el.disabled=true; loadList().then(function(){ var b=$('#reload'); if(b)b.disabled=false; }); return; }
+    if(el.hasAttribute('data-copy')){
+      var txt=el.getAttribute('data-copy');
+      try{ navigator.clipboard.writeText(txt).then(function(){ el.textContent='Copiado'; }).catch(function(){ el.textContent='Selecione e copie o link'; }); }catch(x){ el.textContent='Selecione e copie o link'; }
+      return;
+    }
+    if(el.hasAttribute('data-doc')){
+      sb.storage.from('fichas-pdf').download(el.getAttribute('data-doc')).then(function(r){
+        if(r.error||!r.data){ el.textContent='Não consegui baixar'; return; }
+        var a=document.createElement('a'); a.href=URL.createObjectURL(r.data); a.download=el.getAttribute('data-doc').split('/').pop(); document.body.appendChild(a); a.click(); a.remove();
+      });
+      return;
+    }
+    if(el.id==='newlink'){
+      var p=cur(); if(!p)return; el.disabled=true;
+      sb.rpc('renovar_convite',{p_id:p.id,p_dias:p.status==='validada'?60:14}).then(function(r){
+        el.disabled=false;
+        if(r.error){ $('#linkbox').innerHTML='<span class="msg bad">Não consegui gerar o link: '+esc(r.error.message)+'</span>'; return; }
+        showLink(p,r.data.token);
+      });
+    }
+  });
+
+  $('#detail').addEventListener('click',function(e){
+    var p=cur(); if(!p)return;
+    if(e.target.id==='editmodel'){ show('md'); return; }
+    if(e.target.id==='gen'){
+      var ta=$('#x_orient'), gb=e.target;
+      if(ta.value.trim()&&!gb.getAttribute('data-armed')){
+        gb.setAttribute('data-armed','1'); gb.textContent='Substituir o texto atual?';
+        setTimeout(function(){ gb.removeAttribute('data-armed'); gb.textContent='Gerar texto-base'; },5000);
+        return;
+      }
+      gb.removeAttribute('data-armed'); gb.textContent='Gerar texto-base';
+      ta.value=genOrient(p); p.ficha.orient=ta.value; refresh(); queueSave(p);
+    }
+    if(e.target.id==='copy'){
+      var ta2=$('#x_orient'); var msg=$('#copied');
+      try{ navigator.clipboard.writeText(ta2.value).then(function(){ msg.textContent='Texto copiado.'; }).catch(function(){ ta2.select(); msg.textContent='Texto selecionado. Copie com Ctrl+C.'; }); }catch(x){ ta2.select(); msg.textContent='Texto selecionado. Copie com Ctrl+C.'; }
+    }
+  });
+
+  /*MODELO-INI*/
+  var TPL_KEY='apa-modelo-orientacoes';
+  function defaultTpl(){
+    var an={}; L.ANEST.forEach(function(a){ an[a[0]]=a[2]; });
+    return {
+      saudacao:'Olá, {nome}! Segue o resumo das orientações para a sua anestesia. Leia com calma e me chame se ficar com qualquer dúvida.',
+      fechamento:'Qualquer dúvida, responda esta mensagem.',
+      anest:an,
+      secoes:[
+        {id:'anestesia',titulo:'SOBRE A SUA ANESTESIA',texto:'A escolha final é confirmada com você no dia da cirurgia e pode mudar por segurança.'},
+        {id:'jejum_por_que',titulo:'JEJUM: POR QUE É TÃO IMPORTANTE',texto:'Durante a anestesia, os reflexos que protegem o pulmão ficam reduzidos. Se houver comida ou líquido no estômago, ele pode voltar e cair no pulmão, causando uma pneumonia grave. Por isso o jejum é uma regra de segurança, e a cirurgia pode ser adiada se ele não for cumprido. Conte sempre a verdade sobre o que comeu e bebeu.'},
+        {id:'jejum_horas',titulo:'QUANTAS HORAS, E DE QUÊ (contando até o horário da cirurgia)',texto:[
+          '• 8 horas antes: refeições completas e alimentos gordurosos. Ex.: arroz, feijão, carnes, ovos, frituras, feijoada, pizza, hambúrguer, castanhas.',
+          '• 6 horas antes: refeições leves e leite. Ex.: pão, torrada, bolacha, tapioca, fruta, iogurte, mingau, leite, café com leite, vitamina e suco com polpa.',
+          '• 2 horas antes: só líquidos claros, aqueles que deixam enxergar através. Ex.: água, água de coco, chá ou café sem leite, suco coado sem polpa, isotônico.',
+          '• Nas 2 horas antes da cirurgia: nada, nem água. Evite também chiclete, bala e cigarro durante o jejum.',
+          '',
+          'Exemplo: cirurgia às 14h. Refeição completa até 6h, refeição leve até 8h e líquidos claros até 12h.',
+          'Se o horário da cirurgia mudar, eu aviso o novo horário do jejum.'].join('\n')},
+        {id:'agua',titulo:'NÃO FIQUE SEM TOMAR ÁGUA',texto:'Jejum de comida não é jejum de água. Passar muitas horas sem beber deixa você desidratada, o que piora tontura, queda de pressão, enjoo e dor de cabeça, e dificulta pegar a veia. Beba água normalmente e pode tomar até 1 garrafa de 500 ml, até 2 horas antes do horário da cirurgia. Depois disso, nada.'},
+        {id:'medic',titulo:'MEDICAMENTOS',texto:'• Não tome nenhum remédio novo sem avisar a anestesista.'},
+        {id:'casa',titulo:'ANTES DE SAIR DE CASA',texto:[
+          '• Tome banho e escove os dentes, sem engolir a água.',
+          '• Não venha com o cabelo molhado: molhado, o corpo perde calor e você sente mais frio e tremor.',
+          '• Não passe hidratante, creme ou óleo no corpo logo depois do banho. Isso atrapalha os eletrodos do monitor e a fixação dos curativos.',
+          '• Venha sem maquiagem no rosto, se possível.'].join('\n')},
+        {id:'retire',titulo:'RETIRE ANTES DA CIRURGIA',texto:[
+          '• Joias, brincos, anéis, piercings, relógio e outros adornos.',
+          '• Prótese dentária removível. Se tiver dente mole ou aparelho, avise.',
+          '• Lentes de contato. Se usa, venha com óculos.',
+          '• Extensão de cílios e extensão de cabelo (megahair).',
+          '• Esmalte: use só cores claras ou retire. Cores escuras atrapalham o aparelho que mede o oxigênio no seu dedo.',
+          '• Unhas muito compridas: evite, elas também atrapalham esse aparelho.'].join('\n')},
+        {id:'acomp',titulo:'ACOMPANHANTE E DOCUMENTOS',texto:[
+          '• Venha com um adulto responsável, maior de 18 anos, que fique com você e leve você para casa.',
+          '• Traga documento oficial com foto, seus exames e o risco cirúrgico.',
+          '• Avise se tiver febre, gripe, tosse ou qualquer mudança na saúde antes da cirurgia.'].join('\n')},
+        {id:'p24',titulo:'NAS PRIMEIRAS 24 HORAS DEPOIS',texto:[
+          '• Não dirija.',
+          '• Não assine documentos importantes.',
+          '• Não marque compromissos importantes.',
+          '• Fique aos cuidados de um adulto de confiança.',
+          '• Aproveite para repousar.',
+          '',
+          'Por que isso é importante? Os medicamentos da anestesia saem do corpo aos poucos. Mesmo que você se sinta bem, nas primeiras 24 horas a atenção, os reflexos, o equilíbrio, a memória e a capacidade de decidir podem estar alterados, e você pode ficar sonolenta, tonta ou enjoada. Dirigir ou assinar algo nesse período traz risco de acidente e de decisões das quais você pode não lembrar. O adulto de confiança ajuda se você passar mal ou sentir tontura, e o repouso ajuda a sua recuperação.'].join('\n')}
+      ]
+    };
+  }
+  function mergeTpl(s){
+    var d=defaultTpl(); if(!s||typeof s!=='object')return d;
+    if(typeof s.saudacao==='string')d.saudacao=s.saudacao;
+    if(typeof s.fechamento==='string')d.fechamento=s.fechamento;
+    if(Array.isArray(s.secoes))d.secoes.forEach(function(x){ s.secoes.forEach(function(y){ if(y&&y.id===x.id){ if(typeof y.titulo==='string')x.titulo=y.titulo; if(typeof y.texto==='string')x.texto=y.texto; } }); });
+    if(s.anest&&typeof s.anest==='object'){ for(var k in s.anest){ if(typeof s.anest[k]==='string')d.anest[k]=s.anest[k]; } }
+    return d;
+  }
+  var tpl=defaultTpl();
+  try{ var rawT=localStorage.getItem(TPL_KEY); if(rawT)tpl=mergeTpl(JSON.parse(rawT)); }catch(e){}
+
+  function genOrient(p){
+    var T=tpl, f=p.ficha||{}, o=[], nome=(p.nome||'').split(' ')[0];
+    function lines(t){ String(t||'').split(/\r?\n/).forEach(function(l){ o.push(l); }); }
+    lines(T.saudacao.replace(/\{nome\}/g,nome));
+    T.secoes.forEach(function(s){
+      o.push(''); o.push(s.titulo);
+      if(s.id==='anestesia'){
+        if(f.anest1){
+          o.push('Tipo planejado: '+L.anestLabel(f.anest1,f.anest1_outra)+'.');
+          if(T.anest[f.anest1])o.push(T.anest[f.anest1]);
+          if(f.anest2&&f.anest2!=='nenhuma'){
+            o.push(''); o.push('Alternativa, se for preciso mudar: '+L.anestLabel(f.anest2,f.anest2_outra)+'.');
+            if(T.anest[f.anest2])o.push(T.anest[f.anest2]);
+          }
+          if(f.anest_motivo)o.push('Quando a alternativa é usada: '+f.anest_motivo);
+          o.push(''); lines(s.texto);
+        } else { o.push('[definir o tipo de anestesia e a alternativa na ficha]'); }
+        return;
+      }
+      if(s.id==='medic'){
+        if(p.medicacoes&&!/^(n[aã]o|nenhum)/i.test(p.medicacoes.trim()))o.push('• Em uso: '+p.medicacoes+'. [definir quais tomar com um gole de água no dia].');
+        if(p.hormonio==='sim')o.push('• Hormônio ('+(p.hormonio_qual||'informado')+'): [definir manter ou suspender, junto com o cirurgião].');
+        if(p.anticoag==='sim')o.push('• Afinador do sangue ou aspirina: [definir suspensão, junto com o cirurgião]. Não pare por conta própria.');
+        if(p.suplementos&&p.suplementos.trim())o.push('• Suplementos e chás: '+p.suplementos+'. [definir quando suspender].');
+      }
+      lines(s.texto);
+      if(s.id==='jejum_horas'&&p.emagrecedor==='sim')o.push('• Caneta emagrecedora ('+(p.emagrecedor_qual||'informada no formulário')+'): [definir quando suspender e se o jejum será maior].');
+    });
+    o.push(''); lines(T.fechamento);
+    return o.join('\n');
+  }
+  /*MODELO-FIM*/
+
+  /* ===== Tela de modelos ===== */
+  var dirty=false, armed=false;
+  var HINTS={anestesia:'Antes deste texto entram o tipo de anestesia e a alternativa escolhidos na ficha.',jejum_horas:'Se a paciente usa caneta emagrecedora, entra uma linha extra no fim.',medic:'Antes deste texto entram os medicamentos e suplementos que a paciente informou.'};
+  function mdLine(key,label,val,hint){ return '<div class="f"><label class="lbl" for="md_'+key+'">'+esc(label)+'</label><input type="text" id="md_'+key+'" data-md="'+key+'" value="'+esc(val||'')+'" autocomplete="off">'+(hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</div>'; }
+  function mdArea(key,label,val,hint){ var n=String(val||'').split('\n').length; return '<div class="f"><label class="lbl" for="md_'+key+'">'+esc(label)+'</label><textarea id="md_'+key+'" data-md="'+key+'" rows="'+Math.max(3,Math.min(n+1,14))+'">'+esc(val||'')+'</textarea>'+(hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</div>'; }
+  function mdMsg(t){ var m=$('#md_msg'); if(m)m.textContent=t; }
+  function renderMd(){
+    var h='<div class="head"><h1>Modelos de texto</h1><p class="muted sm">Estes textos alimentam o botão “Gerar texto-base” da ficha. Edite uma vez e vale para todas as próximas pacientes. Os trechos que dependem das respostas da paciente continuam sendo gerados.</p></div>';
+    h+='<div class="card"><h3>Saudação e fechamento</h3>'+mdLine('saud','Saudação',tpl.saudacao,'Use {nome} para o primeiro nome da paciente.')+mdLine('fech','Fechamento',tpl.fechamento)+'</div>';
+    tpl.secoes.forEach(function(s,i){
+      h+='<div class="card">'+mdLine('t'+i,'Título da seção',s.titulo)+mdArea('x'+i,'Texto',s.texto,HINTS[s.id])+'</div>';
+    });
+    h+='<div class="card"><h3>Como explicar cada anestesia</h3><p class="muted sm">Entram na seção “Sobre a sua anestesia”, conforme o tipo escolhido na ficha.</p>';
+    L.ANEST.forEach(function(a){ if(a[0]!=='outra')h+=mdArea('a_'+a[0],a[1],tpl.anest[a[0]]); });
+    h+='</div>';
+    h+='<div class="card"><div class="actions"><button type="button" class="btn" id="md_reset">Restaurar texto padrão</button><button type="button" class="btn pri" id="md_save">Salvar modelo</button></div><div class="hint" id="md_msg" role="status">'+(dirty?'Alterações ainda não salvas.':'')+'</div></div>';
+    $('#v-md').innerHTML=h;
+  }
+  $('#v-md').addEventListener('input',function(e){
+    var k=e.target.getAttribute&&e.target.getAttribute('data-md'); if(!k)return; var v=e.target.value;
+    if(k==='saud')tpl.saudacao=v; else if(k==='fech')tpl.fechamento=v;
+    else if(k.charAt(0)==='t')tpl.secoes[+k.slice(1)].titulo=v;
+    else if(k.charAt(0)==='x')tpl.secoes[+k.slice(1)].texto=v;
+    else if(k.indexOf('a_')===0)tpl.anest[k.slice(2)]=v;
+    dirty=true; mdMsg('Alterações ainda não salvas.');
+  });
+  $('#v-md').addEventListener('click',function(e){
+    if(e.target.id==='md_save'){ saveTpl(); return; }
+    if(e.target.id==='md_reset'){
+      if(!armed){ armed=true; e.target.textContent='Confirmar: apagar minhas edições'; setTimeout(function(){ armed=false; var b=$('#md_reset'); if(b)b.textContent='Restaurar texto padrão'; },5000); return; }
+      armed=false; tpl=defaultTpl(); dirty=true; renderMd(); mdMsg('Texto padrão restaurado. Clique em “Salvar modelo” para guardar.');
+    }
+  });
+
+
+  function saveTpl(){
+    var json=JSON.stringify(tpl), local=false;
+    try{ localStorage.setItem(TPL_KEY,json); local=true; }catch(e){}
+    if(!sb){ dirty=false; mdMsg(local?'Salvo só neste navegador.':'Não foi possível salvar.'); return; }
+    mdMsg('Salvando…');
+    sb.from('modelos').upsert({chave:'orientacoes',conteudo:{json:json},atualizado_em:new Date().toISOString()},{onConflict:'chave'}).then(function(r){
+      if(r.error){ mdMsg((local?'Salvo só neste navegador. ':'')+'Não consegui salvar no sistema: '+r.error.message); return; }
+      dirty=false; mdMsg('Modelo salvo. Vale para as próximas fichas.');
+    });
+  }
+  function loadTpl(){
+    sb.from('modelos').select('conteudo').eq('chave','orientacoes').maybeSingle().then(function(r){
+      if(r.error||!r.data||!r.data.conteudo||typeof r.data.conteudo.json!=='string')return;
+      try{ tpl=mergeTpl(JSON.parse(r.data.conteudo.json)); if(!$('#v-md').hidden&&!dirty)renderMd(); }catch(x){}
+    });
+  }
+
+  ['fx','nv','md','ac'].forEach(function(k){ $('#tab-'+k).addEventListener('click',function(){ show(k); }); });
+  $('#logout').addEventListener('click',function(){ if(sb)sb.auth.signOut(); });
+
+  var mt=location.hash.match(/^#\/p\/([A-Za-z0-9]+)$/);
+  if(mt){ MODE='paciente'; TOKEN=mt[1]; bootPatient(); } else { startStaff(); }
+
+})();
+</script>
+</body>
+</html>
