@@ -197,6 +197,7 @@ details .full h3{margin-block-start:6px}
 (function(){
   var DOENCAS=['Pressão alta','Diabetes','Asma ou bronquite','Problema no coração','Tireoide','Refluxo ou azia forte','Trombose ou coágulos','Anemia','Outra','Nenhuma dessas'];
   var PROBLEMAS=['Enjoo ou vômito forte depois','Dificuldade para respirar ou colocar o tubo','Reação alérgica','Acordei durante a anestesia','Febre alta ou rigidez no corpo','Outro problema','Nenhum problema'];
+  var ADORNOS=['Piercing (em qualquer parte do corpo)','Unha de gel, acrílico ou fibra','Aplique ou extensão de cabelo (megahair)','Extensão de cílios','Brincos, anéis ou colares','Lentes de contato','Outro','Nenhum desses'];
   var DENTES=['Dente mole','Prótese ou ponte','Aparelho nos dentes','Piercing na boca ou língua','Outro','Nenhum desses'];
   function parseNum(v){ if(v===null||v===undefined||v==='')return null; var n=parseFloat(String(v).replace(',','.')); return isNaN(n)?null:n; }
   function fmt(n){ return String(Math.round(n*10)/10).replace('.',','); }
@@ -239,7 +240,7 @@ details .full h3{margin-block-start:6px}
     if(p.anticoag==='sim')add('vermelho','Usa anticoagulante ou AAS: definir suspensão junto com o cirurgião');
     if(p.emagrecedor==='sim')add('amarelo','Caneta emagrecedora: definir jejum e conduta'+(p.emagrecedor_qual?' ('+p.emagrecedor_qual+')':''));
     if(p.hormonio==='sim')add('amarelo','Hormônio em uso: risco de trombose, avaliar profilaxia'+(p.hormonio_qual?' ('+p.hormonio_qual+')':''));
-    if(p.alergia==='sim')add('amarelo','Alergia referida'+(p.alergia_qual?': '+p.alergia_qual:''));
+    if(p.alergia==='sim')add('amarelo','Alergia referida'+(p.alergia_qual?': '+p.alergia_qual:'')+(p.alergia_reacao?' · reação: '+p.alergia_reacao:''));
     if(p.tabaco==='atual')add('amarelo','Fuma ou usa vape');
     if(p.alcool==='diario')add('amarelo','Álcool todos os dias');
     var sup=(p.suplementos||'').trim();
@@ -320,7 +321,7 @@ details .full h3{margin-block-start:6px}
     ['Glicose',[['glic','Glicemia','mg/dL'],['hba1c','HbA1c','%']]]
   ];
 
-  var KEYMAP={'Problemas de saúde':'doencas','Caneta emagrecedora':'emagrecedor','Hormônio':'hormonio','Anticoagulante ou AAS':'anticoag','Suplementos':'suplementos','Suplementos e chás':'suplementos','Alergia':'alergia','Fumo / álcool':'tabalc','Fumo e álcool':'tabalc','Anestesia anterior':'anest_problemas','Problema na família':'familia','Problema grave na família':'familia','Ronco / pausas no sono':'sono','Ronco e pausas no sono':'sono','Boca e dentes':'dentes','Chance de gravidez':'gravida','Transfusão de sangue':'transfusao','Outras informações':'outras_info','Mallampati':'via.mall','Abertura da boca':'via.boca','Distância queixo-pescoço':'via.tmd','Mordida do lábio':'via.mordida','Mobilidade do pescoço':'via.pescoco','Qualidade da avaliação':'via.qualidade','ECG':'exames.ecg','Ecocardiograma':'exames.eco','Risco cirúrgico':'exames.risco','Data dos exames':'exames.data'};
+  var KEYMAP={'Problemas de saúde':'doencas','Caneta emagrecedora':'emagrecedor','Hormônio':'hormonio','Anticoagulante ou AAS':'anticoag','Suplementos':'suplementos','Suplementos e chás':'suplementos','Alergia':'alergia','Fumo / álcool':'tabalc','Fumo e álcool':'tabalc','Anestesia anterior':'anest_problemas','Problema na família':'familia','Problema grave na família':'familia','Ronco / pausas no sono':'sono','Ronco e pausas no sono':'sono','Boca e dentes':'dentes','Adornos':'adornos','Chance de gravidez':'gravida','Transfusão de sangue':'transfusao','Outras informações':'outras_info','Mallampati':'via.mall','Abertura da boca':'via.boca','Distância queixo-pescoço':'via.tmd','Mordida do lábio':'via.mordida','Mobilidade do pescoço':'via.pescoco','Qualidade da avaliação':'via.qualidade','ECG':'exames.ecg','Ecocardiograma':'exames.eco','Risco cirúrgico':'exames.risco','Data dos exames':'exames.data'};
   LABGROUPS.forEach(function(g){ g[1].forEach(function(c){ KEYMAP[c[1]]='exames.'+c[0]; }); });
 
   /* Campo -> 'amarelo' | 'vermelho' quando a resposta ou o resultado foge do esperado */
@@ -337,6 +338,7 @@ details .full h3{margin-block-start:6px}
     if(p.anticoag==='sim')set('anticoag','vermelho');
     var sup=(p.suplementos||'').trim(); if(sup&&!/^(n[aã]o|nenhum)/i.test(sup))set('suplementos','amarelo');
     if(p.alergia==='sim')set('alergia','amarelo');
+    if((p.adornos||[]).some(function(x){ return !/^Nenhum/.test(x); }))set('adornos','amarelo');
     if(p.tabaco==='atual'||p.alcool==='diario')set('tabalc','amarelo');
     if(nz(pr,/^Nenhum/))set('anest_problemas',(has(pr,'Dificuldade para respirar ou colocar o tubo')||has(pr,'Febre alta ou rigidez no corpo'))?'vermelho':'amarelo');
     if(p.familia==='sim')set('familia','vermelho');
@@ -375,7 +377,8 @@ details .full h3{margin-block-start:6px}
     var MED='Dra. Layla Praça Agra · CRM-PB 17284';
     var TRF={autorizo:'Autoriza',nao_autorizo:'NÃO autoriza',conversar:'Quer conversar na videoconsulta'};
     var TRP={autorizo:'você autoriza a transfusão, em último caso e só se for necessária para proteger sua vida ou sua saúde',nao_autorizo:'você não autoriza a transfusão de sangue',conversar:'você quer conversar sobre isso na videoconsulta'};
-    function flagPairs(pairs){ return pairs.map(function(pr){ var k=KEYMAP[pr[0]]; return (k&&ff[k])?[pr[0],pr[1],ff[k]]:pr; }); }
+    var pront=(mode==='prontuario');
+    function flagPairs(pairs){ if(pront)return pairs; return pairs.map(function(pr){ var k=KEYMAP[pr[0]]; return (k&&ff[k])?[pr[0],pr[1],ff[k]]:pr; }); }
     doc.setLineHeightFactor(1.2);
     function tc(c){ doc.setTextColor(c[0],c[1],c[2]); }
     function bd(s){ if(!s)return '—'; var q=s.split('-'); return q[2]+'/'+q[1]+'/'+q[0]; }
@@ -407,28 +410,16 @@ details .full h3{margin-block-start:6px}
     function lab(text){ room(24); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); tc(MUT); doc.text(text.toUpperCase(),M,y); y+=12; }
 
     doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]); doc.rect(0,0,W,52,'F');
-    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text(mode==='paciente'?'Orientações para a sua anestesia':'Ficha de avaliação pré-anestésica',M,32);
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text(pront?'Prontuário · Avaliação pré-anestésica':'Ficha de avaliação pré-anestésica',M,32);
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text('Anexty Health Solutions',W-M,32,{align:'right'});
-    if(mode!=='paciente'){ doc.setFontSize(8); doc.text('USO INTERNO · não enviar à paciente',W-M,44,{align:'right'}); }
+    if(!pront){ doc.setFontSize(8); doc.text('USO INTERNO · com triagem de risco · não enviar à paciente',W-M,44,{align:'right'}); }
     y=70;
 
-    if(mode==='paciente'){
-      /* Versão para a paciente: sem triagem, ASA, exames nem observações da anestesista */
-      kv([['Paciente',val(p.nome)],['Data da cirurgia',bd(p.data_cirurgia)],['Hospital',val(p.hospital)],['Cirurgião',val(p.cirurgiao)],['Cirurgia',val(p.procedimento)]],2);
-      if(f.anest1){ sec('Anestesia planejada'); kv([['Tipo planejado',anestLabel(f.anest1,f.anest1_outra)],['Alternativa, se for preciso',f.anest2?anestLabel(f.anest2,f.anest2_outra):'—']],2); }
-      if(p.transfusao){ sec('Transfusão de sangue'); para('Decisão registrada: '+(TRP[p.transfusao]||'—')+'.'); }
-      sec('Orientações'); para(val(f.orient));
-      sec('Termo de consentimento');
-      para(p.tcle_aceite?('Aceito em '+val(p.tcle_quando)+' por '+val(p.tcle_nome)+'. Versão do termo: '+val(p.tcle_versao)+'.'):'Termo ainda não aceito.');
-      room(80); y+=40;
-      doc.setDrawColor(NAVY[0],NAVY[1],NAVY[2]); doc.setLineWidth(0.6); doc.line(M,y,M+230,y); y+=12;
-      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); tc(MUT); doc.text(MED,M,y);
-      return finish();
-    }
     kv([['Paciente',val(p.nome)],['Nascimento',bd(p.nascimento)+(a!==null?' ('+a+' anos)':'')],
         ['Peso / altura / IMC',val(p.peso)+' kg · '+val(p.altura)+' cm'+(b!==null?' · IMC '+fmt(b):'')],['Classificação ASA',f.asa?'ASA '+f.asa:'—'],
         ['Data da cirurgia',bd(p.data_cirurgia)],['Hospital',val(p.hospital)],['Cirurgião',val(p.cirurgiao)],['Cirurgia',val(p.procedimento)]],2);
 
+    if(!pront){
     sec('Triagem de risco');
     var col={verde:[46,125,50],amarelo:[196,140,0],vermelho:[185,40,40]}[t.level];
     doc.setFillColor(col[0],col[1],col[2]); doc.roundedRect(M,y-10,86,18,4,4,'F');
@@ -436,13 +427,15 @@ details .full h3{margin-block-start:6px}
     if(t.reasons.length){ t.reasons.forEach(function(r){ para('• '+r.t); }); } else { para('Nenhum alerta nas respostas.'); }
     if(pend.length){ lab('Pendências'); pend.forEach(function(x){ para('• '+x); }); }
 
+    }
+
     sec('Respostas da paciente');
     kv(flagPairs([['Problemas de saúde',lo(p.doencas,p.doencas_outras)],['Remédios em uso',val(p.medicacoes)],
         ['Caneta emagrecedora',yn(p.emagrecedor)+(p.emagrecedor_qual?' · '+p.emagrecedor_qual:'')],['Hormônio',yn(p.hormonio)+(p.hormonio_qual?' · '+p.hormonio_qual:'')],
         ['Anticoagulante ou AAS',yn(p.anticoag)],['Suplementos e chás',val(p.suplementos)],
-        ['Alergia',yn(p.alergia)+(p.alergia_qual?' · '+p.alergia_qual:'')],['Fumo e álcool',({nunca:'Nunca fumou',ex:'Ex-fumante',atual:'Fuma ou usa vape'}[p.tabaco]||'—')+' · '+({nenhum:'Não bebe',social:'Bebe socialmente',diario:'Bebe todos os dias'}[p.alcool]||'—')],
+        ['Alergia',yn(p.alergia)+(p.alergia_qual?' · '+p.alergia_qual:'')+(p.alergia_reacao?' · Reação: '+p.alergia_reacao:'')],['Fumo e álcool',({nunca:'Nunca fumou',ex:'Ex-fumante',atual:'Fuma ou usa vape'}[p.tabaco]||'—')+' · '+({nenhum:'Não bebe',social:'Bebe socialmente',diario:'Bebe todos os dias'}[p.alcool]||'—')],
         ['Anestesia anterior',yn(p.anest_previa)+(p.anest_problemas?' · '+lo(p.anest_problemas,p.anest_problemas_outros):'')],['Problema grave na família',yn(p.familia)],
-        ['Ronco e pausas no sono',({nao:'Não ronca',as_vezes:'Ronca às vezes',alto:'Ronco alto'}[p.ronco]||'—')+' · pausas: '+yn(p.paradas)],['Boca e dentes',lo(p.dentes,p.dentes_outros)],
+        ['Ronco e pausas no sono',({nao:'Não ronca',as_vezes:'Ronca às vezes',alto:'Ronco alto'}[p.ronco]||'—')+' · pausas: '+yn(p.paradas)],['Boca e dentes',lo(p.dentes,p.dentes_outros)],['Adornos',lo(p.adornos,p.adornos_outros)],
         ['Chance de gravidez',({nao:'Não',talvez:'Talvez',sim:'Sim'}[p.gravida]||'—')],['Transfusão de sangue',TRF[p.transfusao]||'—'],['Outras informações',val(p.outras_info)]]),2);
 
     sec('Resultados de exames');
@@ -471,6 +464,14 @@ details .full h3{margin-block-start:6px}
 
     sec('Termo de consentimento');
     para(p.tcle_aceite?('Aceito em '+val(p.tcle_quando)+' por '+val(p.tcle_nome)+'. Versão do termo: '+val(p.tcle_versao)+'.'):'Termo ainda não aceito pela paciente.');
+    if(p.tcle_texto){
+      String(p.tcle_texto).replace(/\{\{nome\}\}/g,val(p.tcle_nome||p.nome)).split(/\r?\n/).forEach(function(l){
+        var m=l.match(/^##\s+(.*)$/);
+        if(m){ room(34); y+=6; doc.setFont('helvetica','bold'); doc.setFontSize(10); tc(NAVY); doc.text(m[1],M,y); y+=14; return; }
+        if(l.trim()==='')return;
+        para(l.replace(/^[-*]\s+/,'• '),9);
+      });
+    }
 
     sec('Validação');
     para(f.validacao?('Validada em '+f.validacao.quando+' · '+f.validacao.decisao+'.'):'Aguardando validação da anestesista.');
@@ -486,14 +487,14 @@ details .full h3{margin-block-start:6px}
       var n=doc.getNumberOfPages(), gen=nowBR();
       for(var i=1;i<=n;i++){
         doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); tc(MUT);
-        doc.text((p.example?'EXEMPLO COM DADOS FICTÍCIOS · ':'')+(mode==='paciente'?'':'USO INTERNO · ')+val(p.nome)+' · Gerado em '+gen,M,H-26);
+        doc.text((p.example?'EXEMPLO COM DADOS FICTÍCIOS · ':'')+(pront?'':'USO INTERNO · ')+val(p.nome)+' · Gerado em '+gen,M,H-26);
         doc.text('Página '+i+' de '+n,W-M,H-26,{align:'right'});
       }
       return doc;
     }
   }
 
-  window.APA_LOGIC={triage:triage,pendencias:pendencias,bmi:bmi,ageOf:ageOf,parseNum:parseNum,fmt:fmt,daysBetween:daysBetween,DOENCAS:DOENCAS,PROBLEMAS:PROBLEMAS,DENTES:DENTES,LABGROUPS:LABGROUPS,buildPdf:buildPdf,fieldFlags:fieldFlags,KEYMAP:KEYMAP,nowBR:nowBR,ANEST:ANEST,anestLabel:anestLabel,anestDesc:anestDesc};
+  window.APA_LOGIC={triage:triage,pendencias:pendencias,bmi:bmi,ageOf:ageOf,parseNum:parseNum,fmt:fmt,daysBetween:daysBetween,DOENCAS:DOENCAS,PROBLEMAS:PROBLEMAS,DENTES:DENTES,ADORNOS:ADORNOS,LABGROUPS:LABGROUPS,buildPdf:buildPdf,fieldFlags:fieldFlags,KEYMAP:KEYMAP,nowBR:nowBR,ANEST:ANEST,anestLabel:anestLabel,anestDesc:anestDesc};
 
 })();
 </script>
@@ -531,7 +532,8 @@ details .full h3{margin-block-start:6px}
       {id:'anticoag',type:'radio',label:'Usa remédio para afinar o sangue ou aspirina?',options:SN},
       {id:'suplementos',type:'area',label:'Vitaminas, suplementos, chás ou fitoterápicos',hint:'Alguns aumentam o risco de sangramento.'},
       {id:'alergia',type:'radio',label:'Tem alergia a remédio, látex ou alimento?',options:SN},
-      {id:'alergia_qual',type:'text',label:'A que e qual reação?',show:function(d){return d.alergia==='sim';}},
+      {id:'alergia_qual',type:'text',label:'A que você tem alergia?',req:1,ph:'Ex.: dipirona, látex, camarão',show:function(d){return d.alergia==='sim';}},
+      {id:'alergia_reacao',type:'area',label:'Como foi a reação?',req:1,hint:'Ex.: coceira, manchas na pele, inchaço, falta de ar, desmaio. Se precisou de atendimento no hospital, conte também.',show:function(d){return d.alergia==='sim';}},
       {id:'tabaco',type:'radio',label:'Cigarro ou vape',options:[['nunca','Nunca usei'],['ex','Já usei, parei'],['atual','Uso hoje']]},
       {id:'alcool',type:'radio',label:'Bebida alcoólica',options:[['nenhum','Não bebo'],['social','De vez em quando'],['diario','Todos os dias']]},
       {id:'outras_info',type:'area',label:'Mais alguma informação sobre sua saúde?',hint:'Qualquer coisa que não apareceu nas perguntas acima. Se não houver, deixe em branco.'}]},
@@ -544,6 +546,8 @@ details .full h3{margin-block-start:6px}
       {id:'paradas',type:'radio',label:'Já disseram que você para de respirar dormindo?',options:[['sim','Sim'],['nao','Não'],['nsei','Não sei']]},
       {id:'dentes',type:'check',label:'Na boca, você tem algum destes?',options:opts(L.DENTES)},
       {id:'dentes_outros',type:'text',label:'O que mais você tem na boca ou nos dentes?',req:1,show:function(d){return (d.dentes||[]).indexOf('Outro')>=0;}},
+      {id:'adornos',type:'check',label:'Você usa ou tem algum destes?',hint:'Alguns atrapalham os aparelhos ou o procedimento e precisam ser retirados antes da cirurgia.',options:opts(L.ADORNOS)},
+      {id:'adornos_outros',type:'text',label:'Qual outro adorno ou acessório?',req:1,show:function(d){return (d.adornos||[]).indexOf('Outro')>=0;}},
       {id:'gravida',type:'radio',label:'Existe chance de você estar grávida?',options:[['nao','Não'],['talvez','Talvez'],['sim','Sim']]}]},
     {id:'tcle',title:'Termo de consentimento',intro:'Leia o resumo. O texto completo está logo abaixo.',pre:'tcle',fields:[
       {id:'transfusao',type:'radio',label:'Se houver sangramento importante durante a cirurgia, você autoriza transfusão de sangue? Ela só é feita em último caso, quando necessária para proteger sua vida ou sua saúde.',req:1,options:[['autorizo','Autorizo'],['nao_autorizo','Não autorizo'],['conversar','Quero conversar sobre isso na videoconsulta']]},
@@ -732,13 +736,15 @@ details .full h3{margin-block-start:6px}
   }
   function renderClosed(){
     var c=INFO.copia||{};
-    var h='<div class="card done"><span class="eyebrow">Concluída</span><h1>Sua avaliação foi concluída</h1><p>Obrigada, '+esc(firstName(draft.nome||INFO.nome))+'. A anestesista validou a sua avaliação. Baixe a sua cópia e guarde com você.</p><div class="actions"><button type="button" class="btn pri" id="dlcopy">Baixar minha cópia (PDF)</button></div><div class="hint" id="dlmsg" role="status"></div></div>';
+    var h='<div class="card done"><span class="eyebrow">Concluída</span><h1>Sua avaliação foi concluída</h1><p>Obrigada, '+esc(firstName(draft.nome||INFO.nome))+'. A anestesista validou a sua avaliação. Baixe a sua cópia e guarde com você.</p><div class="actions"><button type="button" class="btn pri" id="dlcopy">Baixar minha avaliação completa (PDF)</button></div><div class="hint" id="dlmsg" role="status"></div></div>';
     $('#v-pt').innerHTML=h;
     $('#dlcopy').addEventListener('click',function(){
       var msg=$('#dlmsg');
       try{
-        var p2={nome:draft.nome||INFO.nome,data_cirurgia:draft.data_cirurgia||INFO.data_cirurgia,hospital:draft.hospital||INFO.hospital,cirurgiao:draft.cirurgiao||INFO.cirurgiao,procedimento:draft.procedimento||INFO.procedimento,transfusao:draft.transfusao,tcle_aceite:true,tcle_quando:brFrom(c.tcle_aceito_em),tcle_nome:c.tcle_nome,tcle_versao:c.tcle_versao,ficha:{anest1:c.anest1,anest1_outra:c.anest1_outra,anest2:c.anest2,anest2_outra:c.anest2_outra,orient:c.orientacoes||''}};
-        L.buildPdf(p2,window.jspdf.jsPDF,'paciente').save('orientacoes-anestesia-'+slug(p2.nome)+'.pdf');
+        var bf=blankFicha();
+        var p2=Object.assign({},draft,{nome:draft.nome||INFO.nome,data_cirurgia:draft.data_cirurgia||INFO.data_cirurgia,hospital:draft.hospital||INFO.hospital,cirurgiao:draft.cirurgiao||INFO.cirurgiao,procedimento:draft.procedimento||INFO.procedimento,tcle_aceite:true,tcle_quando:brFrom(c.tcle_aceito_em),tcle_nome:c.tcle_nome,tcle_versao:c.tcle_versao,tcle_texto:c.tcle_texto||'',
+          ficha:{exames:Object.assign(bf.exames,c.exames||{}),via:Object.assign(bf.via,c.via_aerea||{}),asa:c.asa||'',anest1:c.anest1,anest1_outra:c.anest1_outra,anest2:c.anest2,anest2_outra:c.anest2_outra,anest_motivo:c.anest_motivo||'',conduta:c.observacoes||'',orient:c.orientacoes||'',decisao:c.decisao||'',validacao:c.validada_em?{quando:brFrom(c.validada_em),decisao:DEC[c.decisao]||''}:null}});
+        L.buildPdf(p2,window.jspdf.jsPDF,'prontuario').save('avaliacao-pre-anestesica-'+slug(p2.nome)+'.pdf');
         msg.textContent='Arquivo gerado. Procure na pasta de downloads.';
       }catch(e){ msg.textContent='Não foi possível gerar o arquivo agora. Tente de novo.'; }
     });
@@ -750,12 +756,12 @@ details .full h3{margin-block-start:6px}
     p.id=row.id; p.status=row.status; p.contato=row.paciente_contato||'';
     [['nome','paciente_nome'],['data_cirurgia','data_cirurgia'],['hospital','hospital'],['cirurgiao','cirurgiao'],['procedimento','procedimento']].forEach(function(a){ if(!p[a[0]])p[a[0]]=row[a[1]]||''; });
     if(!p.whatsapp)p.whatsapp=p.contato;
-    p.tcle_aceite=!!row.tcle_aceito_em; p.tcle_quando=brFrom(row.tcle_aceito_em); p.tcle_nome=row.tcle_nome_digitado||p.tcle_nome||''; p.tcle_versao=(row.tcle&&row.tcle.versao)||'';
+    p.tcle_aceite=!!row.tcle_aceito_em; p.tcle_quando=brFrom(row.tcle_aceito_em); p.tcle_nome=row.tcle_nome_digitado||p.tcle_nome||''; p.tcle_versao=(row.tcle&&row.tcle.versao)||''; p.tcle_texto=(row.tcle&&row.tcle.texto)||'';
     var b=blankFicha();
     p.ficha={exames:Object.assign(b.exames,row.exames||{}),via:Object.assign(b.via,row.via_aerea||{}),asa:row.asa||'',anest1:row.anest1||'',anest1_outra:row.anest1_outra||'',anest2:row.anest2||'',anest2_outra:row.anest2_outra||'',anest_motivo:row.anest_motivo||'',conduta:row.observacoes||'',orient:row.orientacoes||'',decisao:row.decisao||'',validacao:row.validada_em?{quando:brFrom(row.validada_em),decisao:DEC[row.decisao]||''}:null};
     return p;
   }
-  var SELECT='*, tcle:tcle_versoes(versao)';
+  var SELECT='*, tcle:tcle_versoes(versao,texto)';
   function loadList(){
     return sb.from('avaliacoes').select(SELECT).neq('status','cancelada').order('data_cirurgia',{ascending:true,nullsFirst:false}).then(function(r){
       if(r.error){ $('#plist').innerHTML='<p class="msg bad">Não consegui carregar as fichas: '+esc(r.error.message)+'</p>'; return; }
@@ -900,7 +906,7 @@ details .full h3{margin-block-start:6px}
     sb.from('documentos').select('id,tipo,caminho,criado_em').eq('avaliacao_id',p.id).order('criado_em',{ascending:false}).then(function(r){
       var el=$('#docs'); if(!el||cur()!==p)return;
       if(r.error||!r.data||!r.data.length){ el.innerHTML=''; return; }
-      el.innerHTML='<h3>PDFs guardados na validação</h3><div class="row2">'+r.data.map(function(d){ return '<button type="button" class="btn sm" data-doc="'+esc(d.caminho)+'">'+({ficha_interna:'Ficha interna',orientacoes:'Orientações'}[d.tipo]||esc(d.tipo))+' · '+esc(brFrom(d.criado_em))+'</button>'; }).join('')+'</div>';
+      el.innerHTML='<h3>PDFs guardados na validação</h3><div class="row2">'+r.data.map(function(d){ return '<button type="button" class="btn sm" data-doc="'+esc(d.caminho)+'">'+({ficha_interna:'Ficha com triagem (uso interno)',prontuario:'Prontuário (cópia da paciente)',orientacoes:'Orientações'}[d.tipo]||esc(d.tipo))+' · '+esc(brFrom(d.criado_em))+'</button>'; }).join('')+'</div>';
     });
   }
   function lockDetail(){
@@ -909,7 +915,7 @@ details .full h3{margin-block-start:6px}
   }
   function snapshotPdfs(p){
     var C=window.jspdf.jsPDF;
-    return Promise.all([['ficha_interna','interno'],['orientacoes','paciente']].map(function(pr){
+    return Promise.all([['ficha_interna','interno'],['prontuario','prontuario']].map(function(pr){
       var blob=L.buildPdf(p,C,pr[1]).output('blob'), path=p.id+'/'+pr[0]+'-'+Date.now()+'.pdf';
       return blob.arrayBuffer().then(function(buf){ return crypto.subtle.digest('SHA-256',buf); }).then(function(h){
         var hex=[].map.call(new Uint8Array(h),function(b){ return ('0'+b.toString(16)).slice(-2); }).join('');
@@ -970,12 +976,13 @@ details .full h3{margin-block-start:6px}
       +'<div><b>Hormônio</b>'+yn(p.hormonio)+(p.hormonio_qual?' · '+esc(p.hormonio_qual):'')+'</div>'
       +'<div><b>Anticoagulante ou AAS</b>'+yn(p.anticoag)+'</div>'
       +'<div><b>Suplementos</b>'+esc(p.suplementos||'—')+'</div>'
-      +'<div><b>Alergia</b>'+yn(p.alergia)+(p.alergia_qual?' · '+esc(p.alergia_qual):'')+'</div>'
+      +'<div><b>Alergia</b>'+yn(p.alergia)+(p.alergia_qual?' · '+esc(p.alergia_qual):'')+(p.alergia_reacao?' · reação: '+esc(p.alergia_reacao):'')+'</div>'
       +'<div><b>Fumo / álcool</b>'+esc({nunca:'Nunca fumou',ex:'Ex-fumante',atual:'Fuma'}[p.tabaco]||'—')+' · '+esc({nenhum:'Não bebe',social:'Social',diario:'Diário'}[p.alcool]||'—')+'</div>'
       +'<div><b>Anestesia anterior</b>'+yn(p.anest_previa)+(p.anest_problemas?' · '+esc(listO(p.anest_problemas,p.anest_problemas_outros)):'')+'</div>'
       +'<div><b>Problema na família</b>'+yn(p.familia)+'</div>'
       +'<div><b>Ronco / pausas no sono</b>'+esc({nao:'Não ronca',as_vezes:'Ronca às vezes',alto:'Ronco alto'}[p.ronco]||'—')+' · '+yn(p.paradas)+'</div>'
       +'<div><b>Boca e dentes</b>'+esc(listO(p.dentes,p.dentes_outros))+'</div>'
+      +'<div><b>Adornos</b>'+esc(listO(p.adornos,p.adornos_outros))+'</div>'
       +'<div><b>Chance de gravidez</b>'+esc({nao:'Não',talvez:'Talvez',sim:'Sim'}[p.gravida]||'—')+'</div>'
       +'<div><b>Transfusão de sangue</b>'+esc({autorizo:'Autoriza',nao_autorizo:'NÃO autoriza',conversar:'Quer conversar na videoconsulta'}[p.transfusao]||'—')+'</div>'
       +'<div><b>Outras informações</b>'+esc(p.outras_info||'—')+'</div>'
@@ -1049,7 +1056,7 @@ details .full h3{margin-block-start:6px}
     if(!f.validacao&&needAn)html+='<div class="note warn">Para validar, defina o tipo de anestesia planejada.</div>';
     if(f.validacao){ html+='<div class="val"><span class="stamp">Validada em '+esc(f.validacao.quando)+' · '+esc(f.validacao.decisao)+'</span><button type="button" class="link" id="reopen">Reabrir para editar</button></div><span class="hint">A ficha validada fica travada. Reabra para alterar; cada mudança fica registrada.</span>'; }
     else { html+='<div class="val"><button type="button" class="btn pri" id="validate"'+(ok?'':' disabled')+'>Validar avaliação</button><span class="hint">Registra data, hora e decisão e guarda os PDFs. A validação é sempre manual.</span></div>'; }
-    html+='<div class="val"><button type="button" class="btn" id="pdf">Baixar ficha completa (uso interno)</button><button type="button" class="btn" id="pdfp">Baixar orientações para a paciente</button><span class="hint">A ficha completa tem a triagem e as suas observações e não deve ser enviada. O PDF da paciente não tem. <span id="pdfmsg" role="status"></span></span></div>';
+    html+='<div class="val"><button type="button" class="btn pri" id="pdfp">Baixar prontuário completo (para a paciente)</button><button type="button" class="btn" id="pdf">Baixar com triagem (uso interno)</button><span class="hint">O prontuário é a cópia integral da avaliação, sem a triagem automática, e é o que a paciente recebe. O outro PDF inclui o semáforo de risco, só para você. <span id="pdfmsg" role="status"></span></span></div>';
     $('#val-box').innerHTML=html;
     var vb=$('#validate'); if(vb)vb.addEventListener('click',function(){
       vb.disabled=true; setStat('Validando…');
@@ -1065,14 +1072,14 @@ details .full h3{margin-block-start:6px}
       rb.disabled=true;
       sb.rpc('reabrir_avaliacao',{p_id:p.id}).then(function(r){ if(r.error){ rb.disabled=false; setStat('Erro: '+r.error.message); return; } reloadOne(p.id); });
     });
-    [['pdf','interno'],['pdfp','paciente']].forEach(function(pair){
+    [['pdf','interno'],['pdfp','prontuario']].forEach(function(pair){
       var pb=$('#'+pair[0]); if(!pb)return;
       pb.addEventListener('click',function(){
         var msg=$('#pdfmsg');
         try{
           var C=window.jspdf&&window.jspdf.jsPDF;
           if(!C){ msg.textContent='A biblioteca de PDF não carregou. Recarregue a página.'; return; }
-          L.buildPdf(p,C,pair[1]).save((pair[1]==='paciente'?'orientacoes-anestesia-':'ficha-pre-anestesica-')+slug(p.nome)+'-'+(p.data_cirurgia||'sem-data')+'.pdf');
+          L.buildPdf(p,C,pair[1]).save((pair[1]==='prontuario'?'prontuario-pre-anestesico-':'ficha-com-triagem-')+slug(p.nome)+'-'+(p.data_cirurgia||'sem-data')+'.pdf');
           msg.textContent='PDF gerado. Procure na pasta de downloads.';
         }catch(e){ msg.textContent='Não foi possível gerar o PDF.'; }
       });
