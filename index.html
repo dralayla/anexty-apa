@@ -196,6 +196,29 @@ details .full h3{margin-block-start:6px}
 /* ===== Lógica de triagem (sem interface) ===== */
 (function(){
   var DOENCAS=['Pressão alta','Diabetes','Asma ou bronquite','Problema no coração','Tireoide','Refluxo ou azia forte','Trombose ou coágulos','Anemia','Outra','Nenhuma dessas'];
+  var DC_GROUPS=[
+    ['dc_card','Coração e circulação',['Pressão alta','Problema no coração','Trombose ou coágulos','Varizes','Outra condição','Não tenho']],
+    ['dc_resp','Pulmão e respiração',['Asma ou bronquite','Enfisema ou DPOC','Rinite ou sinusite','Apneia do sono','Outra condição','Não tenho']],
+    ['dc_gastro','Estômago, intestino e fígado',['Refluxo ou azia forte','Gastrite ou úlcera','Hérnia de hiato','Gordura no fígado ou hepatite','Já fiz cirurgia bariátrica','Outra condição','Não tenho']],
+    ['dc_neuro','Cérebro e nervos',['AVC (derrame)','Enxaqueca','Desmaio','Convulsão','Epilepsia','Ansiedade','Depressão','Outra condição','Não tenho']],
+    ['dc_endo','Hormônios e metabolismo',['Diabetes','Tireoide','Colesterol alto','Outra condição','Não tenho']],
+    ['dc_sangue','Sangue',['Anemia','Problema de coagulação ou sangramento fácil','Outra condição','Não tenho']],
+    ['dc_renal','Rins e urina',['Problema nos rins','Pedra nos rins','Infecção urinária frequente','Outra condição','Não tenho']],
+    ['dc_osso','Ossos, coluna e músculos',['Hérnia de disco ou problema na coluna','Artrose ou artrite','Fibromialgia','Outra condição','Não tenho']],
+    ['dc_outros','Outras condições',['Doença autoimune (lúpus, artrite reumatoide)','Câncer (atual ou já tratado)','Outra condição','Não tenho']]
+  ];
+  var NONE=/^(Nenhum|Não tenho)/;
+  function allD(p){ var o=(p.doencas||[]).filter(function(x){ return !NONE.test(x)&&x!=='Nenhuma dessas'; }); DC_GROUPS.forEach(function(g){ (p[g[0]]||[]).forEach(function(x){ if(!NONE.test(x))o.push(x); }); }); return o; }
+  function outrasTxt(p){ var o=[]; DC_GROUPS.forEach(function(g){ var t=(p[g[0]+'_outras']||'').trim(); if(t&&(p[g[0]]||[]).some(function(x){ return /^Outr/.test(x); }))o.push(t); }); if((p.doencas_outras||'').trim())o.push(p.doencas_outras.trim()); return o.join('; '); }
+  function doencasTxt(p){
+    var parts=[], answered=false, any=false;
+    DC_GROUPS.forEach(function(g){ var a=p[g[0]]; if(!a||!a.length)return; answered=true; var it=a.filter(function(x){ return !NONE.test(x); }); if(!it.length)return; any=true; var o=(p[g[0]+'_outras']||'').trim(); parts.push(g[1]+': '+it.map(function(x){ return /^Outr/.test(x)?(x+(o?' ('+o+')':'')):x; }).join(', ')+'.'); });
+    var leg=(p.doencas||[]).filter(function(x){ return !NONE.test(x)&&x!=='Nenhuma dessas'; });
+    if((p.doencas||[]).length)answered=true;
+    if(leg.length){ any=true; parts.push('Geral: '+leg.map(function(x){ return /^Outr/.test(x)?(x+(p.doencas_outras?' ('+p.doencas_outras+')':'')):x; }).join(', ')+'.'); }
+    if(any)return parts.join(' ');
+    return answered?'Nenhuma das condições listadas':'—';
+  }
   var PROBLEMAS=['Enjoo ou vômito forte depois','Dificuldade para respirar ou colocar o tubo','Reação alérgica','Acordei durante a anestesia','Febre alta ou rigidez no corpo','Outro problema','Nenhum problema'];
   var ADORNOS=['Piercing (em qualquer parte do corpo)','Unha de gel, acrílico ou fibra','Aplique ou extensão de cabelo (megahair)','Extensão de cílios','Brincos, anéis ou colares','Lentes de contato','Outro','Nenhum desses'];
   var DENTES=['Dente mole','Prótese ou ponte','Aparelho nos dentes','Piercing na boca ou língua','Outro','Nenhum desses'];
@@ -229,14 +252,16 @@ details .full h3{margin-block-start:6px}
   function triage(p){
     var R=[]; function add(l,t){ R.push({l:l,t:t}); }
     var f=p.ficha||{}, ex=f.exames||{}, v=f.via||{};
-    var d=p.doencas||[], pr=p.anest_problemas||[], dn=p.dentes||[];
+    var d=allD(p), pr=p.anest_problemas||[], dn=p.dentes||[];
     var b=bmi(p), a=ageOf(p);
     if(b!==null){ if(b>=40)add('vermelho','IMC '+fmt(b)+' (40 ou mais)'); else if(b>=30)add('amarelo','IMC '+fmt(b)+' (30 a 39,9)'); }
     if(a!==null&&a>=60)add('amarelo','Idade de '+a+' anos');
     if(has(d,'Problema no coração'))add('vermelho','Problema no coração');
     if(has(d,'Trombose ou coágulos'))add('vermelho','Trombose ou coágulos no histórico');
-    if(has(d,'Outra'))add('amarelo','Outra condição informada: '+(p.doencas_outras||'sem descrição')+'. Avaliar caso a caso');
+    if(d.some(function(x){ return /^Outr/.test(x); }))add('amarelo','Outra condição informada: '+(outrasTxt(p)||'sem descrição')+'. Avaliar caso a caso');
     [['Pressão alta','Pressão alta'],['Diabetes','Diabetes'],['Asma ou bronquite','Asma ou bronquite'],['Tireoide','Problema de tireoide'],['Refluxo ou azia forte','Refluxo ou azia forte'],['Anemia','Anemia']].forEach(function(k){ if(has(d,k[0]))add('amarelo',k[1]); });
+    var TRATADAS=['Pressão alta','Diabetes','Asma ou bronquite','Tireoide','Refluxo ou azia forte','Anemia','Problema no coração','Trombose ou coágulos'], VERM=['AVC (derrame)','Problema de coagulação ou sangramento fácil'];
+    d.forEach(function(x){ if(/^Outr/.test(x)||TRATADAS.indexOf(x)>=0)return; add(VERM.indexOf(x)>=0?'vermelho':'amarelo','Condição informada: '+x); });
     if(p.anticoag==='sim')add('vermelho','Usa anticoagulante ou AAS: definir suspensão junto com o cirurgião');
     if(p.emagrecedor==='sim')add('amarelo','Caneta emagrecedora: definir jejum e conduta'+(p.emagrecedor_qual?' ('+p.emagrecedor_qual+')':''));
     if(p.hormonio==='sim')add('amarelo','Hormônio em uso: risco de trombose, avaliar profilaxia'+(p.hormonio_qual?' ('+p.hormonio_qual+')':''));
@@ -327,12 +352,12 @@ details .full h3{margin-block-start:6px}
   /* Campo -> 'amarelo' | 'vermelho' quando a resposta ou o resultado foge do esperado */
   function fieldFlags(p){
     var F={}, f=p.ficha||{}, ex=f.exames||{}, v=f.via||{};
-    var d=p.doencas||[], pr=p.anest_problemas||[], dn=p.dentes||[], b=bmi(p), a=ageOf(p);
+    var d=allD(p), pr=p.anest_problemas||[], dn=p.dentes||[], b=bmi(p), a=ageOf(p);
     function set(k,l){ if(F[k]==='vermelho'&&l!=='vermelho')return; F[k]=l; }
     function nz(arr,re){ return arr.filter(function(x){ return !re.test(x); }).length>0; }
     if(b!==null){ if(b>=40)set('imc','vermelho'); else if(b>=30)set('imc','amarelo'); }
     if(a!==null&&a>=60)set('idade','amarelo');
-    if(nz(d,/^Nenhuma/))set('doencas',(has(d,'Problema no coração')||has(d,'Trombose ou coágulos'))?'vermelho':'amarelo');
+    if(nz(d,/^Nenhuma/))set('doencas',(has(d,'Problema no coração')||has(d,'Trombose ou coágulos')||has(d,'AVC (derrame)')||has(d,'Problema de coagulação ou sangramento fácil'))?'vermelho':'amarelo');
     if(p.emagrecedor==='sim')set('emagrecedor','amarelo');
     if(p.hormonio==='sim')set('hormonio','amarelo');
     if(p.anticoag==='sim')set('anticoag','vermelho');
@@ -430,11 +455,12 @@ details .full h3{margin-block-start:6px}
     }
 
     sec('Respostas da paciente');
-    kv(flagPairs([['Problemas de saúde',lo(p.doencas,p.doencas_outras)],['Remédios em uso',val(p.medicacoes)],
+    kv(flagPairs([['Problemas de saúde',doencasTxt(p)]]),1);
+    kv(flagPairs([['Remédios em uso',val(p.medicacoes)],
         ['Caneta emagrecedora',yn(p.emagrecedor)+(p.emagrecedor_qual?' · '+p.emagrecedor_qual:'')],['Hormônio',yn(p.hormonio)+(p.hormonio_qual?' · '+p.hormonio_qual:'')],
         ['Anticoagulante ou AAS',yn(p.anticoag)],['Suplementos e chás',val(p.suplementos)],
         ['Alergia',yn(p.alergia)+(p.alergia_qual?' · '+p.alergia_qual:'')+(p.alergia_reacao?' · Reação: '+p.alergia_reacao:'')],['Fumo e álcool',({nunca:'Nunca fumou',ex:'Ex-fumante',atual:'Fuma ou usa vape'}[p.tabaco]||'—')+' · '+({nenhum:'Não bebe',social:'Bebe socialmente',diario:'Bebe todos os dias'}[p.alcool]||'—')],
-        ['Anestesia anterior',yn(p.anest_previa)+(p.anest_problemas?' · '+lo(p.anest_problemas,p.anest_problemas_outros):'')],['Problema grave na família',yn(p.familia)],
+        ['Cirurgias anteriores',yn(p.cirurg_previa)+(p.cirurg_previa_qual?' · '+p.cirurg_previa_qual:'')],['Anestesia anterior',yn(p.anest_previa)+(p.anest_previa_qual?' · '+p.anest_previa_qual:'')+(p.anest_problemas?' · '+lo(p.anest_problemas,p.anest_problemas_outros):'')],['Problema grave na família',yn(p.familia)+(p.familia_qual?' · '+p.familia_qual:'')],
         ['Ronco e pausas no sono',({nao:'Não ronca',as_vezes:'Ronca às vezes',alto:'Ronco alto'}[p.ronco]||'—')+' · pausas: '+yn(p.paradas)],['Boca e dentes',lo(p.dentes,p.dentes_outros)],['Adornos',lo(p.adornos,p.adornos_outros)],
         ['Chance de gravidez',({nao:'Não',talvez:'Talvez',sim:'Sim'}[p.gravida]||'—')],['Transfusão de sangue',TRF[p.transfusao]||'—'],['Outras informações',val(p.outras_info)]]),2);
 
@@ -494,7 +520,7 @@ details .full h3{margin-block-start:6px}
     }
   }
 
-  window.APA_LOGIC={triage:triage,pendencias:pendencias,bmi:bmi,ageOf:ageOf,parseNum:parseNum,fmt:fmt,daysBetween:daysBetween,DOENCAS:DOENCAS,PROBLEMAS:PROBLEMAS,DENTES:DENTES,ADORNOS:ADORNOS,LABGROUPS:LABGROUPS,buildPdf:buildPdf,fieldFlags:fieldFlags,KEYMAP:KEYMAP,nowBR:nowBR,ANEST:ANEST,anestLabel:anestLabel,anestDesc:anestDesc};
+  window.APA_LOGIC={triage:triage,pendencias:pendencias,bmi:bmi,ageOf:ageOf,parseNum:parseNum,fmt:fmt,daysBetween:daysBetween,DOENCAS:DOENCAS,PROBLEMAS:PROBLEMAS,DENTES:DENTES,ADORNOS:ADORNOS,DC_GROUPS:DC_GROUPS,doencasTxt:doencasTxt,allD:allD,LABGROUPS:LABGROUPS,buildPdf:buildPdf,fieldFlags:fieldFlags,KEYMAP:KEYMAP,nowBR:nowBR,ANEST:ANEST,anestLabel:anestLabel,anestDesc:anestDesc};
 
 })();
 </script>
@@ -510,6 +536,11 @@ details .full h3{margin-block-start:6px}
   var SN=[['sim','Sim'],['nao','Não']];
   function opts(list){ return list.map(function(x){ return [x,x]; }); }
 
+  var dcFields=[];
+  L.DC_GROUPS.forEach(function(g){
+    dcFields.push({id:g[0],type:'check',label:g[1],req:1,options:opts(g[2])});
+    dcFields.push({id:g[0]+'_outras',type:'text',label:'Qual outra condição ('+g[1].toLowerCase()+')?',req:1,hint:'Escreva como souber, mesmo sem o nome técnico.',show:function(d){ return (d[g[0]]||[]).indexOf('Outra condição')>=0; }});
+  });
   var STEPS=[
     {id:'cirurgia',title:'Sua cirurgia',intro:'Confirme os dados que o cirurgião enviou para a anestesia.',fields:[
       {id:'data_cirurgia',type:'date',label:'Data da cirurgia',req:1},
@@ -521,9 +552,8 @@ details .full h3{margin-block-start:6px}
       {id:'nascimento',type:'date',label:'Data de nascimento',req:1},
       {id:'peso',type:'text',label:'Peso (kg)',req:1,inputmode:'decimal',ph:'Ex.: 62,5'},
       {id:'altura',type:'text',label:'Altura (cm)',req:1,inputmode:'numeric',ph:'Ex.: 165'}],post:'bmi'},
-    {id:'saude',title:'Sua saúde',intro:'Responda o que souber. Marque “Nenhuma dessas” se não tiver nada.',fields:[
-      {id:'doencas',type:'check',label:'Você tem ou já teve algum destes problemas?',options:opts(L.DOENCAS)},
-      {id:'doencas_outras',type:'text',label:'Qual outra condição?',req:1,hint:'Escreva como souber, mesmo sem o nome técnico.',show:function(d){return (d.doencas||[]).indexOf('Outra')>=0;}},
+    {id:'saude',title:'Sua saúde',intro:'Em cada grupo, marque o que você tem ou já teve. Se não tiver nada no grupo, marque “Não tenho”.',fields:[
+    ].concat(dcFields,[
       {id:'medicacoes',type:'area',label:'Remédios que usa todos os dias',hint:'Nome e dose, se souber. Se não usa, escreva “nenhum”.'},
       {id:'emagrecedor',type:'radio',label:'Usa ou já usou caneta ou injeção para emagrecer (Ozempic, Wegovy, Mounjaro, Saxenda)?',options:SN},
       {id:'emagrecedor_qual',type:'text',label:'Qual caneta e quando foi a última aplicação?',show:function(d){return d.emagrecedor==='sim';}},
@@ -536,12 +566,16 @@ details .full h3{margin-block-start:6px}
       {id:'alergia_reacao',type:'area',label:'Como foi a reação?',req:1,hint:'Ex.: coceira, manchas na pele, inchaço, falta de ar, desmaio. Se precisou de atendimento no hospital, conte também.',show:function(d){return d.alergia==='sim';}},
       {id:'tabaco',type:'radio',label:'Cigarro ou vape',options:[['nunca','Nunca usei'],['ex','Já usei, parei'],['atual','Uso hoje']]},
       {id:'alcool',type:'radio',label:'Bebida alcoólica',options:[['nenhum','Não bebo'],['social','De vez em quando'],['diario','Todos os dias']]},
-      {id:'outras_info',type:'area',label:'Mais alguma informação sobre sua saúde?',hint:'Qualquer coisa que não apareceu nas perguntas acima. Se não houver, deixe em branco.'}]},
-    {id:'anestesia',title:'Anestesias anteriores',intro:'Isso ajuda a escolher a técnica mais segura.',fields:[
-      {id:'anest_previa',type:'radio',label:'Já fez alguma cirurgia com anestesia?',options:SN},
-      {id:'anest_problemas',type:'check',label:'Teve algum destes problemas?',options:opts(L.PROBLEMAS),show:function(d){return d.anest_previa==='sim';}},
+      {id:'outras_info',type:'area',label:'Mais alguma informação sobre sua saúde?',hint:'Qualquer coisa que não apareceu nas perguntas acima. Se não houver, deixe em branco.'}])},
+    {id:'anestesia',title:'Cirurgias e anestesias anteriores',intro:'Isso ajuda a escolher a técnica mais segura.',fields:[
+      {id:'cirurg_previa',type:'radio',label:'Você já fez alguma cirurgia antes?',options:SN},
+      {id:'cirurg_previa_qual',type:'area',label:'Qual cirurgia, e mais ou menos quando?',req:1,show:function(d){return d.cirurg_previa==='sim';}},
+      {id:'anest_previa',type:'radio',label:'Já fez algum procedimento com anestesia ou sedação? (cirurgia, parto, endoscopia, colonoscopia, dentista etc.)',options:SN},
+      {id:'anest_previa_qual',type:'area',label:'Qual foi o procedimento?',req:1,show:function(d){return d.anest_previa==='sim';}},
+      {id:'anest_problemas',type:'check',label:'Teve algum problema com a anestesia? Marque o que aconteceu.',options:opts(L.PROBLEMAS),show:function(d){return d.anest_previa==='sim';}},
       {id:'anest_problemas_outros',type:'text',label:'Qual foi o outro problema?',req:1,show:function(d){return d.anest_previa==='sim'&&(d.anest_problemas||[]).indexOf('Outro problema')>=0;}},
-      {id:'familia',type:'radio',label:'Alguém da família teve problema grave com anestesia?',options:[['sim','Sim'],['nao','Não'],['nsei','Não sei']]},
+      {id:'familia',type:'radio',label:'Algum familiar já teve problema relacionado a anestesia?',options:[['sim','Sim'],['nao','Não'],['nsei','Não sei']]},
+      {id:'familia_qual',type:'area',label:'Quem teve e qual foi o problema?',req:1,show:function(d){return d.familia==='sim';}},
       {id:'ronco',type:'radio',label:'Você ronca?',options:[['nao','Não'],['as_vezes','Às vezes'],['alto','Alto, todas as noites']]},
       {id:'paradas',type:'radio',label:'Já disseram que você para de respirar dormindo?',options:[['sim','Sim'],['nao','Não'],['nsei','Não sei']]},
       {id:'dentes',type:'check',label:'Na boca, você tem algum destes?',options:opts(L.DENTES)},
@@ -655,8 +689,8 @@ details .full h3{margin-block-start:6px}
   function onField(e){
     var t=e.target; var n=t.name; if(!n||!FIELDS[n])return; var f=FIELDS[n];
     if(f.type==='check'){
-      var excl=/^Nenhum/.test(t.value);
-      if(t.checked){ [].slice.call(document.querySelectorAll('input[name="'+n+'"]')).forEach(function(c){ if(c!==t&&(excl||/^Nenhum/.test(c.value)))c.checked=false; }); }
+      var excl=/^(Nenhum|Não tenho)/.test(t.value);
+      if(t.checked){ [].slice.call(document.querySelectorAll('input[name="'+n+'"]')).forEach(function(c){ if(c!==t&&(excl||/^(Nenhum|Não tenho)/.test(c.value)))c.checked=false; }); }
       draft[n]=[].slice.call(document.querySelectorAll('input[name="'+n+'"]:checked')).map(function(c){ return c.value; });
     } else if(f.type==='check1'){ draft[n]=t.checked;
     } else { draft[n]=t.value; }
@@ -970,7 +1004,7 @@ details .full h3{margin-block-start:6px}
     h+='<div class="kv"><div><b>Data da cirurgia</b>'+brDate(p.data_cirurgia)+'</div><div><b>Hospital</b>'+esc(p.hospital||'—')+'</div><div><b>Cirurgião</b>'+esc(p.cirurgiao||'—')+'</div><div><b>Cirurgia</b>'+esc(p.procedimento||'—')+'</div></div></div>';
     h+='<div class="card"><h3>Alertas e pendências</h3><ul class="alerts" id="tri-list"></ul><details><summary>Regras do semáforo (sugestão inicial)</summary><div class="rules"><p><b>Vermelho:</b> IMC 40 ou mais, problema no coração, trombose, anticoagulante, dificuldade prévia com tubo, suspeita de hipertermia maligna, possível gravidez, apneia com IMC alto, hemoglobina abaixo de 10, plaquetas abaixo de 100 mil, INR acima de 1,4, HbA1c de 8 ou mais, qualquer alerta de via aérea na vídeo.</p><p><b>Amarelo:</b> IMC 30 a 39,9, idade a partir de 60, pressão alta, diabetes, asma, tireoide, refluxo, anemia, caneta emagrecedora, hormônio, alergia, fumo, álcool diário, suplementos, enjoo ou reação em anestesia anterior, ronco alto, dentes ou aparelho, exame com mais de 90 dias, via aérea inconclusiva, plaquetas de 100 a 150 mil e exames fora da faixa (leucócitos, TTPa, ureia, creatinina, sódio, potássio, cálcio, magnésio, TGO/TGP, glicemia e HbA1c a partir de 6,5). As faixas variam entre laboratórios e podem ser ajustadas.</p><p class="muted">O semáforo só organiza a fila. A decisão é sempre sua.</p></div></details></div>';
     h+='<div class="card"><h3>Respostas da paciente</h3><div class="kv">'
-      +'<div><b>Problemas de saúde</b>'+esc(listO(p.doencas,p.doencas_outras))+'</div>'
+      +'<div><b>Problemas de saúde</b>'+esc(L.doencasTxt(p))+'</div>'
       +'<div><b>Remédios</b>'+esc(p.medicacoes||'—')+'</div>'
       +'<div><b>Caneta emagrecedora</b>'+yn(p.emagrecedor)+(p.emagrecedor_qual?' · '+esc(p.emagrecedor_qual):'')+'</div>'
       +'<div><b>Hormônio</b>'+yn(p.hormonio)+(p.hormonio_qual?' · '+esc(p.hormonio_qual):'')+'</div>'
@@ -978,8 +1012,9 @@ details .full h3{margin-block-start:6px}
       +'<div><b>Suplementos</b>'+esc(p.suplementos||'—')+'</div>'
       +'<div><b>Alergia</b>'+yn(p.alergia)+(p.alergia_qual?' · '+esc(p.alergia_qual):'')+(p.alergia_reacao?' · reação: '+esc(p.alergia_reacao):'')+'</div>'
       +'<div><b>Fumo / álcool</b>'+esc({nunca:'Nunca fumou',ex:'Ex-fumante',atual:'Fuma'}[p.tabaco]||'—')+' · '+esc({nenhum:'Não bebe',social:'Social',diario:'Diário'}[p.alcool]||'—')+'</div>'
-      +'<div><b>Anestesia anterior</b>'+yn(p.anest_previa)+(p.anest_problemas?' · '+esc(listO(p.anest_problemas,p.anest_problemas_outros)):'')+'</div>'
-      +'<div><b>Problema na família</b>'+yn(p.familia)+'</div>'
+      +'<div><b>Cirurgias anteriores</b>'+yn(p.cirurg_previa)+(p.cirurg_previa_qual?' · '+esc(p.cirurg_previa_qual):'')+'</div>'
+      +'<div><b>Anestesia anterior</b>'+yn(p.anest_previa)+(p.anest_previa_qual?' · '+esc(p.anest_previa_qual):'')+(p.anest_problemas?' · '+esc(listO(p.anest_problemas,p.anest_problemas_outros)):'')+'</div>'
+      +'<div><b>Problema na família</b>'+yn(p.familia)+(p.familia_qual?' · '+esc(p.familia_qual):'')+'</div>'
       +'<div><b>Ronco / pausas no sono</b>'+esc({nao:'Não ronca',as_vezes:'Ronca às vezes',alto:'Ronco alto'}[p.ronco]||'—')+' · '+yn(p.paradas)+'</div>'
       +'<div><b>Boca e dentes</b>'+esc(listO(p.dentes,p.dentes_outros))+'</div>'
       +'<div><b>Adornos</b>'+esc(listO(p.adornos,p.adornos_outros))+'</div>'
