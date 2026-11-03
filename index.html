@@ -489,7 +489,7 @@ details .full h3{margin-block-start:6px}
     sec('Orientações à paciente'); para(val(f.orient));
 
     sec('Termo de consentimento');
-    para(p.tcle_aceite?('Aceito em '+val(p.tcle_quando)+' por '+val(p.tcle_nome)+'. Versão do termo: '+val(p.tcle_versao)+'.'):'Termo ainda não aceito pela paciente.');
+    para(p.tcle_aceite?('Aceito eletronicamente em '+val(p.tcle_quando)+' por '+val(p.tcle_nome)+' (nome digitado como assinatura). Versão do termo: '+val(p.tcle_versao)+'.'):'Termo ainda não aceito pela paciente.');
     if(p.tcle_texto){
       String(p.tcle_texto).replace(/\{\{nome\}\}/g,val(p.tcle_nome||p.nome)).split(/\r?\n/).forEach(function(l){
         var m=l.match(/^##\s+(.*)$/);
@@ -500,7 +500,7 @@ details .full h3{margin-block-start:6px}
     }
 
     sec('Validação');
-    para(f.validacao?('Validada em '+f.validacao.quando+' · '+f.validacao.decisao+'.'):'Aguardando validação da anestesista.');
+    para(f.validacao?('Validada eletronicamente por '+MED+' em '+f.validacao.quando+' · '+f.validacao.decisao+'.'):'Aguardando validação da anestesista.');
     room(80); y+=40;
     doc.setDrawColor(NAVY[0],NAVY[1],NAVY[2]); doc.setLineWidth(0.6);
     doc.line(M,y,M+230,y); doc.line(W-M-230,y,W-M,y); y+=12;
@@ -587,7 +587,7 @@ details .full h3{margin-block-start:6px}
       {id:'transfusao',type:'radio',label:'Se houver sangramento importante durante a cirurgia, você autoriza transfusão de sangue? Ela só é feita em último caso, quando necessária para proteger sua vida ou sua saúde.',req:1,options:[['autorizo','Autorizo'],['nao_autorizo','Não autorizo'],['conversar','Quero conversar sobre isso na videoconsulta']]},
       {id:'tcle_aceite',type:'check1',label:'Li o termo e concordo com a anestesia e com o uso dos meus dados de saúde.',req:1},
       {id:'tcle_nome',type:'text',label:'Digite seu nome completo como assinatura',req:1}]},
-    {id:'video',title:'Videoconsulta',intro:'Uma conversa rápida de cerca de 10 minutos para tirar dúvidas e orientar você.',fields:[
+    {id:'video',title:'Videoconsulta',intro:'Uma conversa rápida de cerca de 10 minutos para tirar dúvidas e orientar você.',pre:'O período que você escolher é uma preferência. A anestesista vai verificar a agenda para ver a disponibilidade de vaga e entrará em contato pelo WhatsApp para agendar a videoconsulta.',fields:[
       {id:'periodo',type:'radio',label:'Melhor período para a chamada',options:[['manha','Manhã'],['tarde','Tarde'],['noite','Noite']]},
       {id:'whatsapp',type:'text',label:'WhatsApp para a chamada',inputmode:'tel',ph:'(83) 90000-0000'},
       {id:'duvidas',type:'area',label:'Alguma dúvida para a anestesista?'}]}
@@ -763,7 +763,7 @@ details .full h3{margin-block-start:6px}
     },function(){ btn.disabled=false; btn.textContent=old; setSaved('Não consegui enviar: verifique sua conexão e tente de novo.'); });
   }
   function renderDone(){
-    var h='<div class="card done"><span class="eyebrow">Enviado</span><h1>Recebemos sua avaliação</h1><p>Obrigada, '+esc(firstName(draft.nome))+'. A anestesista vai analisar suas respostas e os exames enviados pelo seu cirurgião.</p><h3>Próximos passos</h3><ol><li>Você receberá o horário da videoconsulta no WhatsApp informado.</li><li>Na chamada, a anestesista tira suas dúvidas, avalia a via aérea com você e passa as orientações.</li><li>As orientações de jejum e de medicamentos ficam por escrito para você consultar.</li></ol><p class="muted sm">Se lembrar de algo que esqueceu de informar, abra este mesmo link e corrija suas respostas antes da videoconsulta.</p><div class="actions"><button type="button" class="btn" id="edit">Corrigir minhas respostas</button></div></div>';
+    var h='<div class="card done"><span class="eyebrow">Enviado</span><h1>Recebemos sua avaliação</h1><p>Obrigada, '+esc(firstName(draft.nome))+'. A anestesista vai analisar suas respostas e os seus exames.</p><h3>Próximos passos</h3><ol><li>A anestesista vai verificar a agenda e entrará em contato pelo WhatsApp informado para agendar a videoconsulta.</li><li>Na chamada, a anestesista tira suas dúvidas, avalia a via aérea com você e passa as orientações.</li><li>As orientações de jejum e de medicamentos ficam por escrito para você consultar.</li></ol><p class="muted sm">Se lembrar de algo que esqueceu de informar, abra este mesmo link e corrija suas respostas antes da videoconsulta.</p><div class="actions"><button type="button" class="btn" id="edit">Corrigir minhas respostas</button></div></div>';
     $('#v-pt').innerHTML=h;
     $('#edit').addEventListener('click',function(){ submitted=false; step=0; renderPt(); });
     window.scrollTo(0,0);
